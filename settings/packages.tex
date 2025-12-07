@@ -1,0 +1,44 @@
+% ===============================
+% Pacchetti generali
+% ===============================
+
+\usepackage[italian]{babel}
+\usepackage{csquotes}
+
+% Font di sistema (Times New Roman richiede XeLaTeX)
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Courier New}
+
+% Immagini
+\usepackage{graphicx}
+\graphicspath{{../figures/}}
+
+% Tabelle
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+% Colori (se servono)
+\usepackage{xcolor}
+
+% Bibliografia
+\usepackage[
+  backend=biber,
+  style=ieee,
+  sorting=ynt
+]{biblatex}
+
+% Link
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  citecolor=black
+}
+
+% Layout aggiuntivi
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{indentfirst}

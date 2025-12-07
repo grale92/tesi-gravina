@@ -1,0 +1,25 @@
+% ===============================
+% Layout pagina e tipografia
+% ===============================
+
+% Margini ampi per rilegatura
+\geometry{
+  a4paper,
+  inner=3cm,
+  outer=2.5cm,
+  top=3cm,
+  bottom=3cm
+}
+
+% Interlinea corpo testo
+\onehalfspacing
+
+% Note a piè di pagina: 10pt + interlinea singola
+\makeatletter
+\renewcommand\footnotesize{%
+  \@setfontsize\footnotesize{10pt}{12pt}
+}
+\makeatother
+
+% Rimozione indentatura paragrafi
+\setlength{\parindent}{0pt}
