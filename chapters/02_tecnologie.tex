@@ -1,0 +1,11 @@
+\chapter{Tecnologie per l’acquisizione e l’analisi dei documenti}
+
+Il presente capitolo introduce le principali tecnologie impiegate per l'acquisizione, l'analisi e la classificazione dei documenti tecnici oggetto del progetto. In particolare, vengono analizzati i diversi approcci per l'estrazione del testo dai documenti e le tecniche di \textit{Document Understanding} basate su \textit{Machine Learning}, andando ad analizzare sia soluzioni commerciali che open source.
+
+\section{Acquisizione del testo dai documenti}
+
+L'acquisizione del contenuto testuale rappresenta la fase iniziale di qualunque processo di analisi automatica dei documenti. Essa pone le basi necessarie per le successive attività di interpretazione del contenuto, estrazione e conseguente interpretazione delle informazioni.
+
+Nel caso di documenti PDF nativi, il testo è già presente in forma digitale e viene codificato all'interno del documento come insieme di oggetti testuali. Questo consente di estrarre direttamente il contenuto all'interno del documento senza ricorrere a tecniche di riconoscimento ottico dei caratteri. Oltre all'estrazione diretta del testo è possibile anche preservare informazioni utili come la posizione degli elementi sulla pagina e, in certi casi, indicazioni riguardo il layout del documento.
+
+Diversamente, nel caso di documenti scansionati o acquisiti da fotografie, il contenuto testuale non è direttamente accessibile e dev'essere riconosciuto a partire dalla rappresentazione visiva del documento. In questo caso vengono impiegate tecniche di \textit{Optical Character Recognition} (OCR), che consentono di convertire le immagini del testo in una rappresentazione digitale elaborabile. Nonostante allo stato attuale sono disponibili strumenti molto efficaci in tal senso, le tecnologie OCR risultano molto sensibili alla qualità dell'immagine e alla complessità del layout dei documenti \cite{smith2007tesseract}.
