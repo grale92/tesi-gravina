@@ -1,20 +1,67 @@
-\chapter{Contesto e Analisi Funzionale}
+\chapter{Contesto applicativo e dominio del problema}
+\section{Il settore dell’abbigliamento e i processi di certificazione}
 
-1.1 L'applicativo per il controllo di idoneità dei materiali
+Il settore dell'abbigliamento si caratterizza per una filiera produttiva complessa e fortemente distribuita, che coinvolge diversi attori, tra cui fornitori di materie prime, produttori, laboratori di prova ed enti di certificazione. Le normative vigenti rendono centrale la gestione della qualità, della conformità e della tracciabilità dei prodotti lungo l'intero ciclo di vita dei capi, dalla progettazione alla commercializzazione. In particolare, ogni singolo capo di abbigliamento deve conformarsi ai requisiti normativi previsti dal paese di destinazione al fine di essere importato e commercializzato sul relativo mercato.
 
-L'applicativo oggetto del progetto di tesi, inquadrato nell'ambito fashion, viene utilizzato dall'azienda per gestire il flusso del controllo di idoneità dei materiali per la produzione di capi di abbigliamento. Nel dettaglio, ogni capo da produrre deve avere una lunga serie di conformità di carattere fisico, chimico, e non solo, che vengono certificate tramite dei test di laboratorio. Questi test vanno effettuati non solo sul prodotto finito, che nell'ambito viene denominato \textit{modello}, ma anche sulle singole componenti di un capo, denominate \textit{articoli}, alcuni esempi di queste componenti possono essere tessuti, bottoni, cerniere, fodere. Nella struttura gerarchica dell'azienda, ad ogni modello sono associati uno o più articoli che lo compongono, ed un articolo può essere presente in più di un modello.
+Le società del settore sono tenute ad effettuare test fisici e chimici sulle materie prime impiegate e sui prodotti finiti realizzati, con l'obiettivo di verificare la qualità e la conformità degli articoli prima della loro immissione sul mercato. Tali prove sono spesso condotte secondo standard riconosciuti a livello internazionale e rappresentano un passaggio obbligato per la certificazione dei prodotti tessili e di abbigliamento. I risultati dei test vengono formalizzati in report tecnici generalmente forniti da laboratori esterni o da organismi di certificazione riconosciuti.
 
-L'applicativo si configura quindi come un repository che permette di gestire, a partire dall'anagrafica dei modelli e degli articoli:
-- L'anagrafica dei test che ogni modello / articolo deve superare prima di passare in produzione
-- La struttura gerarchica che associa articoli a modelli, in modo da poter avere una visione completa dello stato di avanzamento dei test per quello che diventerà un modello finito
-- Il caricamento e lo storage dei documenti di report dei test di laboratorio
-- L'associazione dei documenti di report agli articoli / modelli
+Il coinvolgimento di enti esterni richiede all'azienda di abbigliamento una gestione efficace del processo di certificazione legata alla capacità di raccogliere, integrare e interpretare le informazioni contenute nella documentazione tecnica all'interno dei sistemi informativi aziendali. I punti principali su cui l'azienda necessita di focalizzarsi per il corretto funzionamento del processo sono:
 
-Gli utenti dell'applicazione non sono solo quindi i dipendenti dell'azienda di abbigliamento, ma viene fornito l'accesso anche ai laboratori stessi (che generalmente sono entità esterne), i quali si occupano del caricamento dei report, questo è un punto cruciale per quella che sarà la problematica affrontata.
+\begin{itemize}
+    \item \textbf{Documentazione centralizzata}. La documentazione tecnica prodotta dai laboratori deve essere raccolta e gestita in modo centralizzato, per evitare di rendere complessa la ricerca delle informazioni, il rischio di incoerenze e per permettere di effettuare analisi trasversali sui dati disponibili.
+    \item \textbf{Pianificazione strutturata delle prove}. Le attività di test e verifica devono essere pianificate in modo coerente con il ciclo di vita del prodotto, tenendo conto delle tempisticihe di sviluppo, dei requisiti normativi e delle specifiche tecniche da verificare, al fine di evitare ritardi nella messa in produzione.
+    \item \textbf{Tracciabilità delle verifiche e dei test eseguiti}. È fondamentale garantire la tracciabilità delle prove effettuate su ciascun articolo e modello, associando in modo univoco i test eseguiti, i metodi di prova, il laboratorio responsabile e i test eseguiti, al fine di supportare l'attività di controllo e di facilitare la ricostruzione dello storico.
+    \item \textbf{Standardizzazione dei processi}. L'adozione di procedure standard consente di ridurre la dipendenza da operazioni manuali e da conoscenze individuali, inoltre facilita l'integrazione dei dati nei sistemi informativi e permette di integrare soluzioni automatizzate.
+\end{itemize}
 
-1.1.1 Il flusso di caricamento dei documenti di report
+\section{Struttura del sistema informativo esistente}
 
-1.2 
+Per ovviare alle esigenze operative e organizzative descritte nella sezione precedente, l'azienda presso cui è stato svolto il progetto ha realizzato una \textbf{applicazione web} dedicata alla gestione del processo di controllo idoneità dei materiali. L'applicativo si configura come un repository centralizzato, progettato per raccogliere in modo strutturato la documentazione normativa e tecnica relativa a materie prime e prodotti finiti, fornendo l'accesso a tutti gli utenti coinvolti nel processo di certificazione. Il sistema consente una gestione efficiente e tracciabile delle richieste di esecuzione dei test, con la possibilità di configurare le richieste in base alle specifiche caratteristiche di ciascun articolo o prodotto finito.
 
+Per fare una breve panoramica sull'applicativo, di seguito verranno elencate le principali funzioni implementate allo stato attuale:
 
+\begin{itemize}
+    \item \textbf{Importazione e visualizzazione dei dati}. Il sistema importa con un processo automatico le anagrafiche dal gestionale aziendale e tramite un'interfaccia user-friendly permette di visualizzare le informazioni sui test da eseguire sia sul prodotto finito che sulle diverse materie prime che lo compongono.
+    \item \textbf{Gestione documentale}. Il sistema consente di caricare documenti di certificazione, audit, test, report di conformità, con la possibilità di associarli a materie prime o prodotti finiti.
+    \item \textbf{Pianificazione, scadenze, rinnovi e alert}. Il sistema può gestire scadenze e rinnovi dei certificati con appositi alert pre-configurati, oltre alla generazione automatica di prove di controllo qualità per un articolo o un modello in base ai dati recuperati in anagrafica.
+    \item \textbf{Reportistica e dashboard}. Report e dashboard che permettono di monitorare lo stato delle certificazioni, visualizzare i gap e generare evidenze per audit interni/esterni, con la possibilità di esportare i dati in documenti Excel.
+    \item \textbf{Integrazione coi laboratori}. L'applicativo è progettato per interfacciarsi direttamente con i laboratori, consentendo lo scambio di informazioni relative ai test. Oltre al caricamento manuale dei report infatti è disponibile un workflow che regola le richieste, la ricezione e lo stato di avanzamento delle prove, per ridurre i tempi di ricezione dei report e alleggerire il carico operativo degli utenti.
+\end{itemize}
 
+\section{Criticità del processo attuale}
+
+[TODO]
+
+\section{Obiettivi funzionali del progetto}
+
+Alla luce di quanto emerso nell'analisi del contesto applicativo e del processo attuale di gestione della documentazione tecnica, il progetto di tesi si pone l'obiettivo di supportare e migliorare il processo di gestione documentale dei report di laboratorio, andando a migliorare alcuni aspetti operativi che possono essere sintetizzati nei seguenti punti:
+
+\begin{itemize}
+  \item \textbf{Supporto automatico al caricamento e all’analisi dei documenti}.  
+  Il sistema mira a facilitare la fase di ingestione dei documenti tecnici, consentendo tramite un modello di machine learning di analizzare la struttura dei report di laboratorio e di estrarre le informazioni rilevanti, riducendo il tempo dovuto alla consultazione manuale dei documenti.
+
+  \item \textbf{Riduzione degli errori umani}.  
+  Tramite l'interpretazione automatizzata dei documenti e all'associazione delle informazioni estratte, il progetto intende ridurre gli errori derivanti da attività manuali ripetitive e migliorare la coerenza dei dati archiviati nel sistema informativo.
+
+  \item \textbf{Miglioramento dell'esperienza utente}.  
+  Il sistema è progettato al fine di restituire all'utente dei suggerimenti automatici che assistano l'utente nell'associazione dei documenti alle corrette entità, contribuendo a semplificare le operazioni di classificazione e in generale a ridurre il tempo di navigazione necessario per compilare tutte le informazioni necessarie al completamento del processo.
+
+  \item \textbf{Incremento della scalabilità del processo}.  
+  Il progetto mira a rendere il sistema informativo più adatto a gestire un numero crescente di documenti, articoli e modelli, ponendo le basi per una gestione più strutturata e sostenibile della documentazione tecnica nel medio e lungo periodo.
+\end{itemize}
+
+% 1.1 L'applicativo per il controllo di idoneità dei materiali
+
+% L'applicativo oggetto del progetto di tesi, inquadrato nell'ambito fashion, viene utilizzato dall'azienda per gestire il flusso del controllo di idoneità dei materiali per la produzione di capi di abbigliamento. Nel dettaglio, ogni capo da produrre deve avere una lunga serie di conformità di carattere fisico, chimico, e non solo, che vengono certificate tramite dei test di laboratorio. Questi test vanno effettuati non solo sul prodotto finito, che nell'ambito viene denominato \textit{modello}, ma anche sulle singole componenti di un capo, denominate \textit{articoli}, alcuni esempi di queste componenti possono essere tessuti, bottoni, cerniere, fodere. Nella struttura gerarchica dell'azienda, ad ogni modello sono associati uno o più articoli che lo compongono, ed un articolo può essere presente in più di un modello.
+
+% L'applicativo si configura quindi come un repository che permette di gestire, a partire dall'anagrafica dei modelli e degli articoli:
+% - L'anagrafica dei test che ogni modello / articolo deve superare prima di passare in produzione
+% - La struttura gerarchica che associa articoli a modelli, in modo da poter avere una visione completa dello stato di avanzamento dei test per quello che diventerà un modello finito
+% - Il caricamento e lo storage dei documenti di report dei test di laboratorio
+% - L'associazione dei documenti di report agli articoli / modelli
+
+% Gli utenti dell'applicazione non sono solo quindi i dipendenti dell'azienda di abbigliamento, ma viene fornito l'accesso anche ai laboratori stessi (che generalmente sono entità esterne), i quali si occupano del caricamento dei report, questo è un punto cruciale per quella che sarà la problematica affrontata.
+
+% 1.1.1 Il flusso di caricamento dei documenti di report
+
+% 1.2 
