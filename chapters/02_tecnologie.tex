@@ -8,4 +8,26 @@ L'acquisizione del contenuto testuale rappresenta la fase iniziale di qualunque 
 
 Nel caso di documenti PDF nativi, il testo è già presente in forma digitale e viene codificato all'interno del documento come insieme di oggetti testuali. Questo consente di estrarre direttamente il contenuto all'interno del documento senza ricorrere a tecniche di riconoscimento ottico dei caratteri. Oltre all'estrazione diretta del testo è possibile anche preservare informazioni utili come la posizione degli elementi sulla pagina e, in certi casi, indicazioni riguardo il layout del documento.
 
-Diversamente, nel caso di documenti scansionati o acquisiti da fotografie, il contenuto testuale non è direttamente accessibile e dev'essere riconosciuto a partire dalla rappresentazione visiva del documento. In questo caso vengono impiegate tecniche di \textit{Optical Character Recognition} (OCR), che consentono di convertire le immagini del testo in una rappresentazione digitale elaborabile. Nonostante allo stato attuale sono disponibili strumenti molto efficaci in tal senso, le tecnologie OCR risultano molto sensibili alla qualità dell'immagine e alla complessità del layout dei documenti \cite{smith2007tesseract}.
+Diversamente, nel caso di documenti scansionati o acquisiti da fotografie, il contenuto testuale non è direttamente accessibile e dev'essere riconosciuto a partire dalla rappresentazione visiva del documento. In questo caso vengono impiegate tecniche di \textit{Optical Character Recognition} (OCR), che consentono di convertire le immagini del testo in una rappresentazione digitale elaborabile. Nonostante allo stato attuale sono disponibili strumenti molto efficaci in tal senso, le tecnologie OCR risultano molto sensibili alla qualità dell'immagine e alla complessità del layout dei documenti.
+
+\subsection{PDF Text Extraction}
+
+I documenti PDF nativi (\emph{digitally-born PDF}) non memorizzano il contenuto testuale secondo una struttura logica basata su parole, righe o paragrafi, bensì come una sequenza di istruzioni grafiche descritte all’interno dei cosiddetti \emph{content streams}. Come definito nella specifica ISO~32000, il testo in un PDF è rappresentato tramite operatori che specificano il font da utilizzare, la dimensione del carattere, le trasformazioni geometriche e la posizione assoluta sulla pagina, tseguiti da stringhe di codici che identificano i simboli da disegnare \cite{ISO32000-1}. Tali stringhe non corrispondono necessariamente a caratteri Unicode, ma devono essere interpretate in funzione dell’encoding del font e, ove presente, della relativa \emph{ToUnicode CMap}. 
+
+[immagine esempio di pdf stream]
+
+Di conseguenza, l’estrazione del testo da un PDF nativo è costituito da un processo di parsing e interpretazione semantica delle istruzioni di rendering. L'obiettivo di tale processo è ricostruire una rappresentazione testuale coerente a partire da informazioni puramente grafiche, combinando i dati relativi ai simboli con le informazioni geometriche e di formattazione associata a ciascun elemento.
+
+\subsection{Optical Character Recognition}
+
+Nel caso di documenti scansionati o acquisiti tramite fotografie, il contenuto testuale non è disponibile in alcuna forma, pertanto viene richiesta l'adozione di strumenti di \textit{Optical Character Recognition} (OCR), il cui obiettivo è convertire la rappresentazione visiva dei caratteri in una sequenza di simboli elaborabili da un sistema informatico.
+
+Un sistema OCR può essere definito come una pipeline composta da più fasi in sequenza. Si ha in primo luogo una fase di \textit{pre-processing}, in cui l'immagine viene normalizzata al fine di ridurre il rumore, viene migliorato il contrasto e corrette eventuali distorsioni geometriche. Queste operazioni hanno lo scopo di separare meglio il testo dal resto e di aumentare l'affidabilità delle fasi successive di riconoscimento.
+
+La fase successiva è detta di segmentazione, e riveste un ruolo centrale nel processo OCR. Consiste nell'individuare le regioni testuali e le loro suddivisioni di livello inferiore, ovvero righe, parole e singoli caratteri. Eventuali errori commessi in questa fase tendono a propagarsi nelle fasi successive, compromettendo l'accuratezza del risultato finale.
+
+Una volta individuate le unità elementari, il processo di riconoscimento vero e proprio associa a ciascun carattere un'etichetta testuale sulla base di modelli addestrati. Nel caso di uno dei più comuni motori ovvero Tesseract, come descritto da Smith nel suo articolo \cite{smith2007tesseract}, il riconoscimento si basa su tecniche di classificazione che combinano informazioni sulla forma, sul contesto e sulla sequenza dei caratteri. L'output di questa fase rappresenta una possibile interpretazione del testo contenuto nell'immagine.
+
+Il processo OCR si conclude con la fase di post-processing, in cui il testo ottenuto viene migliorato a livello di coerenza attraverso l'uso di dizionari, modelli linguistici e regole contestuali. Nonostante queste tecniche possono correggere alcuni errori, non sono in grado di compensare totalmente le imprecisioni dovute a immagini di bassa qualità o da segmentazioni errate.
+
+Nonostante i notevoli progressi fatti in materia, Smith sottolinea come le prestazioni dei sistemi OCR siano largamente dipendenti dalla qualità dei dati di input e dalla complessità del documento. Per questo motivo, se disponibile il testo in formato nativo come nel caso dei PDF nativi, è preferibile optare per tecniche di estrazione diretta del testo.
