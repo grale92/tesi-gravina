@@ -1,6 +1,6 @@
 \chapter{Tecnologie per l’acquisizione e l’analisi dei documenti}
 
-Il presente capitolo introduce le principali tecnologie impiegate per l'acquisizione, l'analisi e la classificazione dei documenti tecnici oggetto del progetto. In particolare, vengono analizzati i diversi approcci per l'estrazione del testo dai documenti e le tecniche di \textit{Document Understanding} basate su \textit{Machine Learning}, andando ad analizzare sia soluzioni commerciali che open source.
+Il presente capitolo introduce le principali tecnologie impiegate per l'acquisizione, l'analisi e la classificazione dei documenti tecnici oggetto del progetto. In particolare, vengono analizzati i diversi approcci per l'estrazione del testo dai documenti e le tecniche di \textit{Information Extraction} basate su \textit{Machine Learning}, andando ad analizzare sia soluzioni commerciali che open source.
 
 \section{Acquisizione del testo dai documenti}
 
@@ -10,7 +10,7 @@ Nel caso di documenti PDF nativi, il testo è già presente in forma digitale e 
 
 Diversamente, nel caso di documenti scansionati o acquisiti da fotografie, il contenuto testuale non è direttamente accessibile e dev'essere riconosciuto a partire dalla rappresentazione visiva del documento. In questo caso vengono impiegate tecniche di \textit{Optical Character Recognition} (OCR), che consentono di convertire le immagini del testo in una rappresentazione digitale elaborabile. Nonostante allo stato attuale sono disponibili strumenti molto efficaci in tal senso, le tecnologie OCR risultano molto sensibili alla qualità dell'immagine e alla complessità del layout dei documenti.
 
-\subsection{PDF Text Extraction}
+\subsection{PDF Text Parsing}
 
 I documenti PDF nativi (\emph{digitally-born PDF}) non memorizzano il contenuto testuale secondo una struttura logica basata su parole, righe o paragrafi, bensì come una sequenza di istruzioni grafiche descritte all’interno dei cosiddetti \emph{content streams}. Come definito nella specifica ISO~32000, il testo in un PDF è rappresentato tramite operatori che specificano il font da utilizzare, la dimensione del carattere, le trasformazioni geometriche e la posizione assoluta sulla pagina, tseguiti da stringhe di codici che identificano i simboli da disegnare \cite{ISO32000-1}. Tali stringhe non corrispondono necessariamente a caratteri Unicode, ma devono essere interpretate in funzione dell’encoding del font e, ove presente, della relativa \emph{ToUnicode CMap}. 
 
@@ -31,3 +31,141 @@ Una volta individuate le unità elementari, il processo di riconoscimento vero e
 Il processo OCR si conclude con la fase di post-processing, in cui il testo ottenuto viene migliorato a livello di coerenza attraverso l'uso di dizionari, modelli linguistici e regole contestuali. Nonostante queste tecniche possono correggere alcuni errori, non sono in grado di compensare totalmente le imprecisioni dovute a immagini di bassa qualità o da segmentazioni errate.
 
 Nonostante i notevoli progressi fatti in materia, Smith sottolinea come le prestazioni dei sistemi OCR siano largamente dipendenti dalla qualità dei dati di input e dalla complessità del documento. Per questo motivo, se disponibile il testo in formato nativo come nel caso dei PDF nativi, è preferibile optare per tecniche di estrazione diretta del testo.
+
+
+\section{Information Extraction}
+
+Una volta ottenuto il contenuto testuale del documento ed eventuali metadati, il problema dell'analisi documentale non può definirsi risolto. Il testo estratto, infatti, è generalmente privo di una struttura semantica e non utilizzabile direttamente all'interno di un sistema informativo. È quindi necessario adoperare tecniche al fine di interpretare il contenuto, identificarne la struttura logica e associare le informazioni estratte a concetti e campi semantici che si ritiene rilevanti.
+
+Con il termine \textit{Information Extraction} si fa proprio riferimento all'insieme di metodologie finalizzati alla comprensione automatica dei documenti, combinando strumenti per l'analisi del contenuto testuale, del layout e del contesto strutturale. Negli ultimi anni, ciò che dato una spinta significativa a tali approcci è l'impiego di tecniche di \textit{Machine Learning}, che consentono di gestire in modo più efficace la complessità e la variabilità dei documenti reali.
+
+\subsection{Task di Information Extraction}
+
+Un sistema di IE non ha come scopo la comprensione totale di un testo, ma una mirata ricerca ed estrazione di specifiche informazioni. Si possono definire infatti le attività di IE come caratterizzate dalle due seguenti proprietà:
+
+\begin{enumerate}
+  \item il tipo di conoscenza che si desidera estrarre può essere descritto attraverso un template fissato e relativamente semplice, composto da più \textit{slot} (o attributi) che vengono riempiti da un sistema di IE durante l'elaborazione, con una stringa presa del testo stesso, con un valore scelto da una lista predefinita o con un riferimento ad un template elaborato precedentemente;
+  \item solo una piccola parte delle informazioni presenti in un testo è rilevante per riempire un singolo \textit{template}.
+\end{enumerate}
+
+Rientrano in tale definizione i seguenti \textit{task}, che possono essere definiti tutti come delle applicazioni di IE:
+
+\begin{itemize}
+    \item \textit{Named Entity Recognition} (NER), consiste nell'identificazione e nella classificazione di predefiniti tipi di entità all'interno del testo. Esempi classici di informazioni che possono essere ritenute entità all'interno di un documento possono essere organizzazioni, persone, luoghi, date, codici identificativi, ecc.
+    \item \textit{Coreference Resolution (COR)}, la quale individua le occorrenze multiple di una stessa entità nel testo.
+    \item \textit{Template Element construction} (TE), operazione che, combinata con COR, permette di aggiungere informazioni descrittive aggiuntive ad un entità.
+    \item \textit{Relationship Extraction} (RE), individuazione e classificazione di relazioni predefinite esistenti tra entità.
+    \item \textit{Event Extraction} (EE), attività che ha l'obiettivo di identificare eventi in un documento ed estrarne relative informazioni. In sintesi il risultato di EE identifica "chi ha fatto cosa, dove, quando, attraverso quali metodi o strumenti e perché". Si può considerare come un mix tra l'estrazione di entità e l'individuazione di relazioni tra esse. 
+\end{itemize}
+
+Al fine di comprendere al meglio le competenze di ciascun task, si consideri la seguente porzione di testo:
+
+\begin{quote}
+    \textit{''Il 12 settembre 2023 il centro di prova AlphaLab ha effettuato una verifica di resistenza meccanica sul componente identificato come CMP-9021, utilizzando il metodo TM-45. Il test ha evidenziato un valore di carico massimo pari a 1250 N, risultando conforme alle specifiche richieste dal cliente Bianchi s.r.l.''}
+\end{quote}
+
+Immaginando di applicare i task definiti in precedenza, di seguito vengono illustrati degli esempi dei risultati ottenuti.
+
+\begin{itemize}
+    \item Risultati di NER
+    \begin{itemize}
+        \item "12 settembre 2023" $\rightarrow$ DATA
+        \item "AlphaLab" $\rightarrow$ ORGANIZZAZIONE
+        \item "CMP-9021" $\rightarrow$ CODICE\_COMPONENTE
+        \item "TM-45" $\rightarrow$ METODO\_DI\_PROVA
+        \item "1250 N" $\rightarrow$ VALORE\_MISURATO
+        \item "Bianchi s.r.l." $\rightarrow$ CLIENTE
+    \end{itemize}
+    \item Risultati di Coreference Resolution (COR)
+    \begin{itemize}
+        \item conformità del componente $\rightarrow$ CMP-9021
+    \end{itemize}
+    \item Risultati di Relationship Extraction (RE)
+    \begin{itemize}
+        \item EseguitoDa("verifica di resistenza meccanica", "AlphaLab")
+        \item ApplicatoA("verifica di resistenza meccanica", "CMP-9021")
+        \item RisultatoTest("verifica di resistenza meccanica", "1250 N")
+    \end{itemize}
+    \item Risultati di Event Extraction (EE)
+    \begin{itemize}
+        \item EVENTO-TEST-1 \\
+        Data: "12 settembre 2023" \\
+        Esecutore: "AlphaLab" \\
+        Oggetto: "CMP-9021" \\
+        Metodo: "TM-45" \\
+        Risultato: "1250 N" \\
+    \end{itemize}
+\end{itemize}
+
+La rappresentazione sopra riportata schematizza le differenze tra i diversi tipi di approccio e di elaborazioni effettuate per ciascun task, ed evidenzia come ognuno di essi definisca, per ciascuna informazione ricercata, un template preciso che specifica quali dati possono essere ritenuti rilevanti e quali possono essere ignorati. La struttura dei dati inoltre, è facilmente riconducibile ai record di un database, mettendo in luce l'obiettivo primario delle attività di IE, ovvero avere qualcosa di facilmente manipolabile da macchine o processi automatizzati.
+
+\section{Named Entity Recognition (NER)}
+
+Nel caso del progetto realizzato, viene posto l'accento sul task di \textit{Named Entity Recognition}, applicato per ottenere i risultati che verranno illustrati in fase di progettazione della soluzione. Come già accennato nel paragrafo precedente, il NER è il task per l'identificazione all'interno di un documento delle occorrenze di entità corrispondenti a categorie semantiche predefinite. Tali categorie sono definite in funzione del contesto applicativo e possono comprendere, ad esempio, persone, organizzazioni, luoghi, date, codici identificativi o valori numerici. In passato i primi sistemi NER hanno ottenuto risultati significativi in termini di accuratezza, ma tramite l'utilizzo di regole e feature specifiche per il contesto di applicazione. Negli ultimi anni, l'introduzione di tecniche di \textit{deep learning}, abilitate all'uso di rappresentazioni vettoriali continue e dalla composizione semantica tramite elaborazioni non lineari, ha permesso di ottenere risultati significativi anche in domini molto eterogenei \cite{lijingsunner}. 
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/ner_example.png}
+  \caption{Esempio di un task di Named Entity Recognition}
+\end{figure}
+
+\subsection{Metriche di valutazione}
+
+Per poter sviluppare al meglio un algoritmo di NER, è necessario in primo luogo definire una serie di metriche necessarie utili alla valutazione di un sistema. Una tecnica che riassume in maniera piuttosto semplice le prestazioni di un algoritmo di riconoscimento è l'uso di una \textit{Confusion Matrix} (matrice di confusione). All'interno di questa matrice vengono inseriti i seguenti valori tipi di un problema di classificazione binaria.
+
+\begin{itemize}
+    \item \textit{True Positive} (TP): entità che sono riconosciute dal modello NER e corrispondono a entità reali.
+    \item \textit{False Positive} (FP): entità che sono riconosciute dal modello NER ma non corrispondono a entità reali.
+    \item \textit{True Negative} (TN): entità che non vengono riconosciute dal modello NER ed effettivamente non corrispondono a entità reali.
+    \item \textit{False Negative} (FN): entità reali che il modello NER non è stato in grado di individuare.
+\end{itemize}
+
+Questi valori vengono poi utilizzati per calcolare due indicatori, ovvero la \textit{Precision} (precisione) e il \textit{Recall} (richiamo):
+
+\[
+Precision = \frac{TP}{TP + FP} \qquad Recall = \frac{TP}{TP + FP}
+\]
+
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/confusion_matrix.png}
+  \caption{Confusion Matrix}
+\end{figure}
+
+Tuttavia, è difficile comparare due modelli solo con la precisione e il richiamo presi separatamente, generalmente si usa la cosiddetta \textit{F-Score} o anche \textit{F1 Measure}, che utilizza la media armonica e rappresenta un'indicazione generale di come funziona il modello a prescindere dal tipo di entità:
+
+\[
+\textit{F-Score} = 2 \cdot \frac{Precision \cdot Recall}{Recall + Precision} 
+\]
+
+Altri strumenti di valutazione sono la \textit{Sensitivity} (sensibilità), che misura quanto il modello sia adatto a riscontrare positivi, e la \textit{Specificity} (specificità), che misura la correttezza nell'assegnazione dei positivi:
+
+\[
+Sensitivity = \frac{TP}{TP + FN} \qquad Specificity = \frac{TN}{TN + FP}
+\]
+
+Altri strumenti di valutazione più complessi sono stati elaborati nel corso degli anni, ma vengono usati meno spesso. Grishman e Sundheim ad esempio nella MUC-6 \cite{grishman-sundheim-1996-message} definiscono una metrica di valutazione \text{relaxed-matching}: un riconoscimento viene considerato valido se un'entità viene riconosciuta indipendentemente dai suoi confini, l'importante è che ci sia una sovrapposizione con i confini di un entità reale; il riconoscimento viene ritenuto valido indipendentemente dal tipo di entità assegnato.
+
+\subsection{Approcci tipici di NER}
+
+Di seguito verranno elencati i principali approcci all'utilizzo di tecniche NER, spesso utilizzati anche in maniera combinata.
+
+\textbf{Approccio Rule-Based}
+
+I sistemi basati su questo approccio si affidano a regole definite in modo specifico. Le regole possono essere definite tramite dizionari specifici del dominio e pattern sintattico-lessicali. Questo approccio generalmente è utilizzabile solo per il caso specificio di applicazione e si caratterizzano per un'alta precisione e un basso richiamo.
+    
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/rule_based.png}
+  \caption{Esempi di approccio Rule-Based}
+\end{figure}
+
+Come descritto da Chiticariu et al. \cite{chiticariu-etal-2013-rule}, una tecnica tipica di questo approccio si basa su un pattern di riconoscimento di triple $(X, \alpha, Y)$, dove $X$ e $Y$ sono entità e $\alpha$ sono le parole in mezzo. Nell'esempio "Paris is in France", $\alpha$ corrisponde a "is in", questo pattern può essere implementato con una \textit{regular expression}.
+    
+\textbf{Approccio Unsupervised Learning}
+
+Un esempio tipico di approccio \textit{unsupervised learning} è il \textit{clustering}. I sistemi NER basati sul clustering estraggono le entità pescando da gruppi (\textit{cluster}) rappresentati da similitudini di contesto. L'idea è che su larga scala è possibile usare pattern lessicali o statistiche computazionali per fare inferenza e individuare entità che, a differenza del caso precedente, possono anche leggermente differire nella forma. Questo approccio è stato utilizzato in modo particolare in ambito biomedico per il riconoscimento di entità a partire da un modello composto da terminologie specifiche, statistiche sul contenuto (es. \textit{term frequency–inverse document frequency}, ovvero quanto una parola è importante in un documento rispetto a una collezione di documenti) e  conoscenza sintattica superficiale.
+
+\textbf{Approccio Supervised Learning}
+
