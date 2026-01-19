@@ -1,0 +1,56 @@
+\chapter{Progettazione}
+
+In questo capitolo viene approfondita l'analisi del problema delineato nel Capitolo~\ref{chap:contesto}, con particolare riferimento all'applicazione di tecniche di Named Entity Recognition per l'estrazione automatica di informazioni da documenti tecnici in formato PDF.
+
+I documenti oggetto di studio sono forniti da enti esterni e risultano progettati principalmente per la consultazione umana. Essi non seguono standard strutturali che favoriscono l'elaborazione automatica, anche a causa della presenza di molteplici soggetti a produrli, ciascuno dei quali adotta layout e impaginazioni differenti. La complessità della struttura è accentuata dall'utilizzo di tabelle, colonne multiple e testi multilingua, elementi che impediscono l'estrazione sistematica delle informazioni.
+
+[immagine esempio documento]
+
+Il problema affrontato nel progetto consiste nell'individuare una strategia efficace per trasformare documenti eterogenei e rumorosi in una rappresentazione strutturata, attraverso l'identificazione automatica di entità rilevanti. A tal fine sono stati presi in considerazione due approcci differenti: una soluzione cloud-based basata su un prodotto già disponibile sul mercato e una soluzione custom che implementa l'intero processo, dalla fase di estrazione del contenuto testuale del file fino all'addestramento e all'utilizzo del modello dedicato per l'estrazione automatica delle entità.
+
+\section{Caso d'uso}
+
+I casi d'uso descrivono l'interazione tra l'utente e l'applicazione. Essi sono essenziali per rappresentare le principali interazioni, definire i requisiti funzionali e non funzionali e orientare lo sviluppo dell'applicazione.
+
+La definizione dei casi d'uso è stata condotta a partire dalle esigenze emerse nelle fasi di analisi precedenti e formalizzate attraverso il confronto con un Business Analyst, che ha contribuito a delineare il processo richiesto. In primo luogo sono stati definiti gli attori coinvolti nel sistema:
+
+\begin{itemize}
+    \item \textbf{Interfaccia Web}: la componente che gestisce il flusso applicativo con cui interagiscono gli utenti;
+    \item \textbf{Utente}: colui che utilizza l'applicazione web per caricare i documenti di report; in questo contesto si tratta di un dipendente di un ente esterno che si occupa di certificazioni e test di laboratorio;
+    \item \textbf{Servizio NER}: il servizio applicativo che utilizza il modello addestrato per estrarre le informazioni significative dal documento;
+    \item \textbf{Database}: il contenitore dei dati relativi ai modelli (prodotti finiti), agli articoli e alle informazioni sui test necessari per il processo produttivo.
+\end{itemize}
+
+[diagramma flusso]
+
+Successivamente, è stato definito nel dettaglio il flusso applicativo desiderato, che ha lo scopo di semplificare il processo di aggiornamento dei test effettuati su un determinato articolo o  modello. Di seguito vengono definite le fasi che caratterizzano tale flusso.
+
+\textbf{Caricamento del report}.   L'utente dell'ente di certificazione accede a una pagina dedicata all'interno dell'applicativo, affiancata a quelle già esistenti e distinta da esse per la semplicità dell'interfaccia. All'apertura della pagina infatti, l'utente visualizza solo vedere un modulo di caricamento che consente di effettuare l'upload del documento PDF, o tramite trascinamento o tramite ricerca nelle cartelle del dispositivo utilizzato. Il documento racchiude i risultati dei test di laboratorio eseguiti su uno specifico articolo o modello.
+
+\textbf{Elaborazione del report}.    Il file viene inoltrato a un servizio di elaborazione che si occupa di caricare il modello NER, che in questo caso potrà corrispondere o al modello cloud-based o a quello implementato custom, e lo utilizzerà per analizzare il file e restituire le entità significative per cui il modello è addestrato. Il formato per poter essere utilizzabile dall'applicazione dev'essere standardizzato per entrambe le soluzioni realizzate.
+
+\textbf{Ricerca delle similarità}.   I dati ottenuti dal modello NER devono essere utilizzati per individuare all'interno del database i record che hanno una corrispondenza con i dati ottenuti dal report, ovvero le singole prove dell'articolo o modello. I \textit{match} individuati non devono essere necessariamente esatti, ma devono contenere i risultati più plausibili in base ai dati a disposizione, per poi essere mostrati all'utente tramite interfaccia.
+
+\textbf{Approvazione dei risultati}. Con la lista dei record a disposizione, l'utente può validare i test effettivamente svolti, oppure in caso di non corrispondenza con ciò che è presente nel report, ha la possibilità di passare alla ricerca manuale sempre tramite interfaccia, utilizzando filtri precompilati a partire dai risultati ottenuti dal modello NER.
+
+
+\section{Requisiti del sistema}
+
+Alla luce delle criticità individuate, il sistema sviluppato deve soddisfarre una serie di requisiti comuni a entrambe le soluzioni analizzate, al fine di consentire un confronto significativo. La soluzione prodotta infatti non sarà direttamente integrata nell'applicativo esistente che è già operativo in produzione, ma fungerà da prototipo che dovrà in seguito ad una valutazione accurata essere poi rifinito e adeguato per poter costituire una nuova funzionalità \text{production-ready}.
+
+\subsection{Requisiti funzionali}
+
+Dal punto di vista funzionale, devono essere soddisfatti una serie di requisiti 
+
+
+\section{Scelte progettuali e approcci considerati}
+
+[TODO]
+
+\section{Architettura generale della soluzione}
+
+[TODO]
+
+\section{Strategie di associazione documento-entità}
+
+[TODO]
