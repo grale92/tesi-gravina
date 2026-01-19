@@ -32,14 +32,14 @@ Applicazione di tecnologie di Text Extraction e Machine Learning per il riconosc
 - Miglioramento dell’esperienza utente
 
 
-# Capitolo 2 – Tecnologie per l’acquisizione e l’analisi dei documenti
+# Capitolo 2 – Background e stato dell'arte
 
 ## 2.1 Acquisizione del testo dai documenti
 - Estrazione del testo da PDF nativi
 - OCR per documenti scansionati
 - Confronto tra i due approcci
 
-## 2.2 Document Understanding e Machine Learning
+## 2.2 Information Extraction
 - Information Extraction
 - Named Entity Recognition (NER)
 - Classificazione dei documenti
@@ -54,48 +54,65 @@ Applicazione di tecnologie di Text Extraction e Machine Learning per il riconosc
 - Framework di machine learning
 
 
-# Capitolo 3 – Analisi dei requisiti e progettazione della soluzione
+# Capitolo 3 – Progettazione
 
-## 3.1 Requisiti funzionali
-- Caricamento dei documenti PDF
+## 3.1 Analisi del problema applicativo
+- Contesto operativo dell’applicazione
+- Tipologia dei documenti trattati
+- Obiettivi dell’automazione documentale
+- Vincoli di integrazione con il sistema informativo esistente
+
+## 3.2 Analisi dei requisiti
+- Caricamento e gestione dei documenti PDF
 - Estrazione delle informazioni rilevanti
 - Proposta automatica di articoli e modelli compatibili
+- Supporto a documenti eterogenei
+- Requisiti di accuratezza, scalabilità e manutenibilità
+- Considerazioni sui costi operativi e sulla sostenibilità della soluzione
 
-## 3.2 Architettura della soluzione
-- Panoramica dell’architettura
-- Modulo di analisi documentale
-- Integrazione con il database esistente
+## 3.3 Scelte progettuali e approcci considerati
+- Approccio basato su servizi gestiti (Google Cloud Document AI)
+- Approccio basato su modelli custom (PDF parser e spaCy)
+- Motivazioni della scelta di un approccio comparativo
+- Analisi preliminare di vantaggi e svantaggi dei due paradigmi
 
-## 3.3 Strategie di associazione documento–entità
-- Approccio basato su regole
-- Approccio basato su similarità
-- Soluzioni ibride
+## 3.4 Architettura generale della soluzione
+- Panoramica dell’architettura complessiva
+- Posizionamento dei moduli di analisi documentale
+- Integrazione con l’applicazione e il database esistenti
+- Flussi di comunicazione ad alto livello
+
+## 3.5 Strategie di associazione documento–entità
+- Associazione basata su regole deterministiche
+- Associazione basata su similarità semantica
+- Strategie ibride e criteri decisionali
+- Impatto dell’approccio di estrazione sul processo di associazione
 
 
-# Capitolo 4 – Implementazione della soluzione
+# Capitolo 4 – Implementazione
 
-## 4.1 Dataset e tipologia dei documenti
-- Tipologie di report di laboratorio analizzati
-- Struttura dei documenti PDF
-- Problematiche riscontrate nei dati reali
+## 4.1 Fine-tuning con Google Cloud
+- Panoramica del servizio Document AI
+- Tipologia di processor utilizzati
+- Configurazione e deploy dei modelli
+- Formato e struttura dell’output prodotto
+- Integrazione tramite API con l’applicazione esistente
 
-## 4.2 Pipeline di elaborazione dei documenti
-- Pre-processing dei PDF
-- Estrazione del testo
-- Normalizzazione e pulizia dei dati
-- Estrazione delle informazioni chiave
+## 4.2 Implementazione del modello di NER
+- Estrazione del testo dai PDF nativi
+- Parsing e normalizzazione del contenuto testuale
+- Pipeline di Information Extraction
+- Modello di Named Entity Recognition basato su spaCy
+- Gestione delle regole e delle fasi di post-processing
 
 ## 4.3 Integrazione con l’applicazione esistente
 - Architettura delle API
-- Flussi di comunicazione
-- Gestione dei risultati dell’analisi
-
-## 4.4 Scelte progettuali e implementative
-- Motivazioni delle tecnologie adottate
-- Compromessi e limitazioni
+- Flussi di comunicazione tra i servizi
+- Gestione e persistenza dei risultati dell’analisi
+- Utilizzo dei dati estratti nei processi applicativi
 
 
-# Capitolo 5 – Valutazione dei risultati e confronto tra le soluzioni
+# Capitolo 5 – Valutazione dei risultati e confronto
 
 ## 5.1 Metodologia di valutazione
 - Dataset di test
