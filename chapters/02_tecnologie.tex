@@ -1,4 +1,4 @@
-\chapter{Tecnologie per l’acquisizione e l’analisi dei documenti}
+\chapter{Background e stato dell'arte}
 
 Il presente capitolo introduce le principali tecnologie impiegate per l'acquisizione, l'analisi e la classificazione dei documenti tecnici oggetto del progetto. In particolare, vengono analizzati i diversi approcci per l'estrazione del testo dai documenti e le tecniche di \textit{Information Extraction} basate su \textit{Machine Learning}, andando ad analizzare sia soluzioni commerciali che open source.
 
@@ -168,4 +168,23 @@ Come descritto da Chiticariu et al. \cite{chiticariu-etal-2013-rule}, una tecnic
 Un esempio tipico di approccio \textit{unsupervised learning} è il \textit{clustering}. I sistemi NER basati sul clustering estraggono le entità pescando da gruppi (\textit{cluster}) rappresentati da similitudini di contesto. L'idea è che su larga scala è possibile usare pattern lessicali o statistiche computazionali per fare inferenza e individuare entità che, a differenza del caso precedente, possono anche leggermente differire nella forma. Questo approccio è stato utilizzato in modo particolare in ambito biomedico per il riconoscimento di entità a partire da un modello composto da terminologie specifiche, statistiche sul contenuto (es. \textit{term frequency–inverse document frequency}, ovvero quanto una parola è importante in un documento rispetto a una collezione di documenti) e  conoscenza sintattica superficiale.
 
 \textbf{Approccio Supervised Learning}
+
+Con questo approccio la costruzione di un modello statistico richiede la disponibilità di dati di addestramento etichettati. Gli esempi annotati consentono agli algoritmi di \textit{machine learning} di apprendere la corretta associazione tra i dati di input e le etichette di output desiderate, guidando il processo decisionale del modello.
+
+Le prestazioni dei metodi supervisionati dipendono in maniera significativa dalla quantità e dalla qualità dei dati di addestramento disponibili. In presenza di un numero ridotto di esempi etichettati, tali approcci possono soffrire di problemi di \textit{data sparseness}, che compromettono la capacità del modello di generalizzare correttamente su dati non visti. Per questo motivo, ottenere elevate prestazioni tramite apprendimento supervisionato risulta difficilmente concepibile senza disporre di un ampio insieme di dati annotati.
+
+In seguito l’attenzione sarà rivolta alle tecniche che utilizzano quest'approccio, poiché esso costituisce la base
+metodologica delle soluzioni implementate nel progetto di tesi.
+
+\subsection{Tecniche di Machine Learning per NER}
+
+Nell'ultimo periodo, i modelli NER basati sul machine learning sono diventati di utilizzo comune e rappresentano lo stato dell'arte. I benefici principali derivanti dall'uso del machine learning per questo tipo di problematiche sono:
+
+\begin{enumerate}
+    \item I modelli di machine learning imparano a riconoscere entità complesse dai dati tramite funzioni di attivazione non lineari.
+    \item I modelli consentono di risparmiare sulla progettazione di funzionalità NER; questi non hanno bisogno di una notevole competenza di dominio per annotare i dati che vengono alimentati. I modelli di deep learning sono efficaci nell'apprendimento di rappresentazioni utili ma nascoste da dati grezzi.
+    \item I modelli possono essere addestrati end-to-end mediante diminuzione del gradiente, che si basa sul concetto di retro-propagazione dell'errore e metodi di regole della catena.
+\end{enumerate}
+
+[TODO]
 
