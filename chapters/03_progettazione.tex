@@ -23,7 +23,7 @@ La definizione dei casi d'uso è stata condotta a partire dalle esigenze emerse 
 
 [diagramma flusso]
 
-Successivamente, è stato definito nel dettaglio il flusso applicativo desiderato, che ha lo scopo di semplificare il processo di aggiornamento dei test effettuati su un determinato articolo o  modello. Di seguito vengono definite le fasi che caratterizzano tale flusso.
+Successivamente, è stato definito nel dettaglio il flusso applicativo desiderato, che ha lo scopo di semplificare il processo di aggiornamento dei test effettuati su un determinato articolo o modello. Di seguito vengono definite le fasi che caratterizzano tale flusso.
 
 \textbf{Caricamento del report}.   L'utente dell'ente di certificazione accede a una pagina dedicata all'interno dell'applicativo, affiancata a quelle già esistenti e distinta da esse per la semplicità dell'interfaccia. All'apertura della pagina infatti, l'utente visualizza solo vedere un modulo di caricamento che consente di effettuare l'upload del documento PDF, o tramite trascinamento o tramite ricerca nelle cartelle del dispositivo utilizzato. Il documento racchiude i risultati dei test di laboratorio eseguiti su uno specifico articolo o modello.
 
@@ -36,16 +36,63 @@ Successivamente, è stato definito nel dettaglio il flusso applicativo desiderat
 
 \section{Requisiti del sistema}
 
-Alla luce delle criticità individuate, il sistema sviluppato deve soddisfarre una serie di requisiti comuni a entrambe le soluzioni analizzate, al fine di consentire un confronto significativo. La soluzione prodotta infatti non sarà direttamente integrata nell'applicativo esistente che è già operativo in produzione, ma fungerà da prototipo che dovrà in seguito ad una valutazione accurata essere poi rifinito e adeguato per poter costituire una nuova funzionalità \text{production-ready}.
+Alla luce delle criticità individuate, il sistema sviluppato deve soddisfarre una serie di requisiti comuni a entrambe le soluzioni analizzate, al fine di consentire un confronto significativo. La soluzione prodotta infatti non sarà direttamente integrata nell'applicativo esistente che è già operativo in produzione, ma fungerà da prototipo che dovrà in seguito ad una valutazione accurata essere poi rifinito e adeguato per poter costituire una nuova funzionalità \textit{production-ready}.
 
-\subsection{Requisiti funzionali}
+Per quanto riguarda i requisiti funzionali, possono essere schematizzati come di seguito.
 
-Dal punto di vista funzionale, devono essere soddisfatti una serie di requisiti 
+\begin{enumerate}
+    \item \textbf{Definizione delle entità rilevanti} : nonostante i documenti possano avere template diversi è necessario ricondurli tutti a una serie di entità comuni che saranno quelle da estrarre
+    \item \textbf{Supporto all'addestramento di un modello NER} : Il sistema deve gestire il flusso di training di un modello NER personalizzato, quindi a partire dalla gestione dei dati di training, alla fase effettiva di addestramento e validazione, fino al salvataggio dell'output finale che verrà poi utilizzato per le funzioni di estrazione delle informazioni
+    \item \textbf{Identificazione automatica delle entità} : il sistema dev'essere in grado di ricevere in input il PDF e estrarre le entità trovate secondo lo schema predefinito utilizzando un modello NER
+    \item \textbf{Produzione di un output strutturato} : l'output dev'essere un insieme di dati strutturato secondo un formato ben preciso (es. JSON)
+    \item \textbf{Normalizzazione dei dati} : Nei report buona parte dei dati pur rappresentando la stessa entità vengono spesso riportati in formati diversi, i dati risultanti dall'estrazione devono essere normalizzati il più possibile per facilitare la fase di ricerca dei risultati.
+\end{enumerate}
+
+Dal punto di vista non funzionale invece, il sistema deve rispecchiare alcuni aspetti tecnici legati al contesto applicativo in cui va inserito, ma anche ad alcune caratteristiche derivanti dagli obiettivi di progetto. Di seguito sono elencati i concetti principali di cui tenere presente durante lo sviluppo.
+
+\textbf{Usabilità}. Pur non rappresentando il focus principale di questa fase prototipale, il sistema deve essere progettato in modo da poter essere integrato in un’interfaccia web semplice e intuitiva, consentendo una fruizione agevole anche da parte di utenti non tecnici coinvolti nel processo di caricamento e validazione dei report.
+
+\textbf{Consistenza}. Il sistema deve garantire un comportamento coerente rispetto alla variabilità dei documenti in ingresso, riducendo il più possibile la dipendenza da specifici template o scelte di impaginazione adottate nei report PDF, così da assicurare risultati affidabili anche in presenza di documenti eterogenei.
+
+\textbf{Modularità}. Considerata la natura sperimentale del progetto, è fondamentale adottare un’architettura modulare che consenta di sostituire, aggiornare o migliorare singole componenti del processo senza compromettere il funzionamento complessivo del sistema.
+
+\textbf{Estendibilità}. Il sistema deve essere progettato in modo da supportare facilmente l’aggiunta di nuove entità informative da estrarre e l’adattamento a nuovi layout documentali, permettendo l’evoluzione della soluzione in funzione di esigenze future senza richiedere una riprogettazione completa.
+
+\textbf{Isolamento}. Il sistema deve essere containerizzato per favorire l’integrazione in un’architettura a microservizi, garantendo l’isolamento delle singole componenti applicative e la comunicazione tramite interfacce ben definite.
+
+\textbf{Riproducibilità}. Particolare attenzione deve essere posta alla riproducibilità del processo di training del modello NER, in modo da consentire iterazioni sperimentali controllate e permettere una valutazione oggettiva delle diverse soluzioni e configurazioni adottate nel corso del progetto.
+
+Come già anticipato, considerata la natura sperimentale del progetto e la necessità di valutare soluzioni applicabili in un contesto reale, si è scelto di analizzare e confrontare due differenti approcci progettuali all’estrazione delle informazioni dai documenti differenti, nelle sezioni successive verranno esposte le due differenti architetture a livello logico.
+
+\section{Approccio basato su soluzioni custom}
+
+In primo luogo, è stata progettata una soluzione custom end-to-end che definisce sia una pipeline di addestramento di un modello di Named Entity Recognition sia un servizio applicativo che utilizza tale modello per la fase di estrazione automatica delle informazioni. L’obiettivo di questo approccio è valutare una soluzione maggiormente controllabile e adattabile al dominio applicativo considerato, consentendo di intervenire in modo puntuale sulle diverse fasi del processo.
+
+La progettazione della soluzione custom ha portato alla definizione di due flussi logici distinti ma complementari: un flusso offline dedicato alla preparazione dei dati e all’addestramento del modello NER, e un flusso online destinato all’utilizzo del modello all’interno dell’applicazione per l’analisi dei documenti caricati dagli utenti. Tale separazione è stata introdotta intenzionalmente al fine di garantire modularità, favorire la sperimentazione e permettere la sostituzione o l’evoluzione di singole componenti senza impatti sull’intero sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/flusso_custom_training.png}
+    \caption{Flusso di training di un modello NER}
+    \label{fig:flusso_custom_training}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/flusso_custom_service.png}
+    \caption{Flusso di utilizzo del modello all’interno del servizio applicativo}
+    \label{fig:flusso_custom_service}
+\end{figure}
+
+La Figura~\ref{fig:flusso_custom_training} mostra la pipeline di training del modello NER, il cui scopo è ottenere come output un modello addestrato a partire da documenti rappresentativi del dominio applicativo. Questo flusso comprende le fasi di estrazione del testo dai documenti PDF, preprocessing, segmentazione in finestre contestuali e annotazione manuale dei dati, culminando nella fase di addestramento del modello.
+
+La Figura~\ref{fig:flusso_custom_service} illustra invece il flusso di utilizzo del modello all’interno del servizio applicativo. In questo caso, il modello NER addestrato viene impiegato per analizzare un documento fornito in input dall’utente, estrarre le entità informative di interesse e produrre un output strutturato, opportunamente normalizzato per facilitarne l’integrazione con i componenti applicativi a valle.
+
+Nei paragrafi successivi vengono descritte nel dettaglio le singole fasi che compongono i due flussi, evidenziandone il ruolo all’interno dell’architettura complessiva e le motivazioni progettuali alla base delle scelte adottate.
 
 
-\section{Scelte progettuali e approcci considerati}
+\section{Approccio basato su servizi gestiti}
 
-[TODO]
 
 \section{Architettura generale della soluzione}
 
