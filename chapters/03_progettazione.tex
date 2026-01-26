@@ -90,6 +90,60 @@ La Figura~\ref{fig:flusso_custom_service} illustra invece il flusso di utilizzo 
 
 Nei paragrafi successivi vengono descritte nel dettaglio le singole fasi che compongono i due flussi, evidenziandone il ruolo all’interno dell’architettura complessiva e le motivazioni progettuali alla base delle scelte adottate.
 
+\subsection{Estrazione del testo}
+
+La prima fase della pipeline riguarda l’estrazione del contenuto testuale dai documenti PDF forniti in input al sistema (\textit{Text Extraction}). Tale operazione rappresenta un passaggio cruciale, in quanto i documenti oggetto di analisi non sono strutturati secondo formati pensati per l’elaborazione automatica, ma sono progettati principalmente per la consultazione umana.
+
+I report di test analizzati presentano infatti caratteristiche eterogenee, quali layout complessi, utilizzo di tabelle, presenza di colonne multiple e contenuti multilingua. Per questo motivo, l’obiettivo della fase di estrazione non è quello di ottenere una rappresentazione perfettamente strutturata del documento, bensì di recuperare in modo affidabile il testo disponibile, preservando il più possibile le informazioni di posizione e di ordine necessarie alle fasi successive della pipeline.
+
+L’output di questa fase consiste in una rappresentazione testuale del documento che include, per ciascun frammento estratto, dati strutturali come la pagina di appartenenza e la \textit{bbox}, ovvero le informazioni posizionali sul rettangolo che racchiude il testo, definito con una quadrupla di coordinate $(x_{min}, y_{min}, x_{max}, y_{max})$ che rappresentano la posizione in pixel a partire dall'angolo in alto a sinistra della pagina.
+
+Questi dati costituiscono la base su cui vengono applicate le successive operazioni di preprocessing e segmentazione, in particolare per la ricerca di strutture tabellari all'interno del documento.
+
+\subsection{Preprocessing}
+
+A partire dall'estrazione testuale, è stata prevista una fase di preprocessing finalizzata a ridurre il rumore presente nei dati e a rendere il contenuto testuale più adatto all’elaborazione tramite modelli di Named Entity Recognition. I documenti analizzati, infatti, contengono spesso elementi non informativi o ridondanti, quali interruzioni di riga arbitrarie, spaziature irregolari, intestazioni ripetute e caratteri speciali introdotti dal processo di conversione del PDF.
+
+Le operazioni di preprocessing hanno lo scopo di normalizzare il testo, mantenendo al contempo un compromesso tra pulizia dei dati e conservazione del contesto informativo. In particolare, vengono applicate trasformazioni volte a uniformare la formattazione del testo, ridurre le discontinuità non significative e semplificare la rappresentazione testuale senza alterare il contenuto semantico rilevante. Inoltre, in questa fase vengono utilizzate le informazioni posizionali per ricostruire le strutture tabellari.
+
+Questa fase è stata progettata come un modulo indipendente della pipeline, in modo da poter essere facilmente adattata o estesa in funzione delle caratteristiche dei documenti analizzati o delle esigenze emerse durante le fasi di sperimentazione. L’output del preprocessing costituisce l’input per la successiva fase di segmentazione del testo.
+
+\subsection{Segmentazione}
+
+La fase di segmentazione (\textit{segmentation}) del testo ha l’obiettivo di suddividere il contenuto estratto e preprocessato in porzioni di dimensione controllata, dette finestre contestuali, che forniscono un input più significativo ai modelli NER. Tale scelta progettuale deriva dalla necessità di gestire documenti di lunghezza elevata, nei quali le informazioni rilevanti risultano distribuite su più pagine e in contesti testuali eterogenei.
+
+Le finestre nel caso generale vengono costruite secondo criteri configurabili, tenendo conto dell’ordine del testo all’interno del documento e delle informazioni di posizione disponibili. Nel nostro caso si è scelto di includere nella finestra un numero fisso di righe, utilizzando una strategia di \textit{stride}, ovvero di una sovrapposizione controllata tra finestre consecutive.
+
+I principali vantaggi di questo approccio sono i seguenti:
+
+\begin{itemize}
+    \item \textbf{Miglioramenti prestazionali e qualitativi della fase di training} : i modelli basati su \textit{transformer} infatti per la loro struttura beneficiano in entrambi gli aspetti indicati avendo delle porzioni ridotte di testo, rispetto a un unico lungo blocco testuale \cite{beltagy2020longformerlongdocumenttransformer}.
+    \item \textbf{Riduzione della \textit{boundary truncation}} : l'utilizzo di \textit{stride} limita il cosiddetto fenomeno della \textit{boundary truncation}, ovvero la possibilità che un'entità sia al confine tra due finestre, con il rischio che parte della entità stessa o del suo contesto sia nella finestra precedente / successiva.
+    \item \textbf{Maggior contestualità a entità rare}: su documenti lunghi e multi-pagina, l'apprendimento per il riconoscimento di poche entità disperse all'interno del contenuto è difficoltoso. Tramite il \textit{windowing} e lo \textit{stride} è possibile avere più occorrenze delle varie entità in un contesto limitato, limitando l'ambiguità introdotta dal testo non correlato.
+\end{itemize}
+
+
+
+\subsection{Etichettatura}
+
+La fase di etichettatura (\textit{labeling}) dei dati costituisce un passaggio fondamentale per l’addestramento supervisionato, in quanto definisce in modo esplicito la corrispondenza tra il testo e le entità informative di interesse. In questa fase, le finestre testuali generate durante la segmentazione vengono annotate manualmente secondo lo schema di etichette definito nella fase iniziale di analisi.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/labeling_example.png}
+    \caption{Esempio di etichettatura}
+\end{figure}
+
+Al fine di garantire consistenza e qualità delle annotazioni, è necessario mantenere degli standard di uniformità, per esempio nella gestione degli spazi, nel mantenimento di un unico formato per entità sintatticamente uguali, evitando di definire entità non direttamente presenti nel testo ma revisionate manualmente.
+
+L’adozione di tali criteri consente di ridurre l’ambiguità durante la fase di training e di fornire al modello esempi supervisionati coerenti, migliorandone la capacità di apprendere le caratteristiche distintive delle entità rilevanti nel dominio considerato. 
+
+L'output ottenuto dalla fase di etichettatura consiste in un file contenente l'associazione tra le finestre contestuali e le relative etichette, indicate semplicemente da una tripla formata dagli indici posizionali di inizio e fine della stringa individuata all'interno del testo, e dalla stringa stessa.
+
+\subsection{Addestramento}
+
+\subsection{Utilizzo del modello NER}
+
 
 \section{Approccio basato su servizi gestiti}
 
