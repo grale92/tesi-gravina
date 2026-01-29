@@ -1,6 +1,39 @@
 \chapter{Implementazione}
 
+Il presente capitolo descrive l’implementazione concreta delle soluzioni descritte fino a questo momento, evidenziando le tecnologie utilizzate e le modalità di integrazione tra i diversi moduli.
+
+In particolare, vengono descritte le principali componenti implementative della soluzione custom basata su tecniche di Named Entity Recognition, nonché le modalità di utilizzo della soluzione cloud-based a fini di confronto. Il capitolo si concentra sugli elementi rilevanti per la realizzazione del prototipo, tralasciando i dettagli implementativi di basso livello, e pone l’attenzione sugli aspetti che incidono maggiormente sull'architettura progettuale.
+
 \section{Tecnologie utilizzate}
+
+\subsection{PyMuPDF}
+
+Per l'estrazione del contenuto testuale dei documenti PDF nativi è stata utilizzata la libreria \textbf{PyMuPdf} \cite{pymupdf_docs}, una trasposizione in \textit{Python} del motore di parsing e rendering open source \textit{MuPDF}, progettato per l'elaborazione efficiente di documenti in formato PDF, XPS ed EPUB.
+
+PyMuPDF consente di accedere direttamente alla rappresentazione interna del documento, permettendo di accedere alle sue componenti fondamentali, secondo il livello di granularità richiesto dall'applicativo. In particolare la libreria offre i seguenti livelli gerarchici di rappresentazione:
+
+\begin{itemize}
+    \item \textbf{Document}: restituisce la rappresentazione del file PDF nel suo complesso
+    \item \textbf{Pages}: restituisce una rappresentazione in una sequenza ordinata di pagine
+    \item \textbf{Blocks}: restituisce le porzioni logiche di contenuto (testo, immagini, disegni)
+    \item \textbf{Lines / Spans}: restituisce unità testuali più finiti, contenenti stringhe di caratteri con attributi di stile
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/pymupdf_structure.png}
+    \caption{Esempio della struttura gerarchica generata da PyMuPDF}
+\end{figure}
+
+Oltre alla rappresentazione testuale, PyMuPDF consente di accedere a informazioni aggiuntive relative al layout e metadati del documento, come coordinate spaziali dei blocchi testuali, font e dimensione dei caratteri. Queste informazioni possono essere utilizzate per migliorare l'interpretazione del contenuto, ad esempio distinguere intestazioni, tabelle o sezioni ricorrenti all'interno del testo.
+
+La libreria si denota per elevata velocità di elaborazione grazie al motore su cui è basata, tuttavia non fornisce nativamente strumenti per l'interpretazione semantica delle strutture testuali estratte. Di conseguenza, PyMuPDF viene utilizzata come componente di basso livello all'interno di una pipeline più strutturata e costituisce l'input per successive fasi di analisi semantica e contestuale.
+
+\subsection{spaCy}
+
+\subsection{FastAPI}
+
+\subsection{Google Cloud Document AI}
 
 \section{Implementazione del modello NER}
 
