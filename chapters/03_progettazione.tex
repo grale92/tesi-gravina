@@ -142,7 +142,16 @@ L'output ottenuto dalla fase di etichettatura consiste in un file contenente l'a
 
 \subsection{Addestramento}
 
+La fase di addestramento (\textit{training}) del modello è stata implementata come un processo supervisionato a partire dai dati annotati manualmente tramite uno strumento di labeling. In particolare, le annotazioni vengono esportate e successivamente convertite in un formato nativo compatibile con la libreria scelta, necessario per l’avvio della fase di training.
+
+Durante questa fase, il testo viene tokenizzato e le annotazioni vengono riallineate alla tokenizzazione interna del modello, adottando una strategia difensiva per gestire eventuali disallineamenti tra gli offset testuali e i confini dei token. Le entità che non risultano correttamente allineabili vengono scartate, evitando così errori durante l’addestramento e garantendo la stabilità del processo.
+
+Al fine di consentire una valutazione oggettiva delle prestazioni del modello, il dataset annotato viene suddiviso automaticamente in un insieme di addestramento e un insieme di validazione, secondo una proporzione configurabile. Tale suddivisione viene effettuata in modo riproducibile, utilizzando un \textit{seed} casuale, così da rendere confrontabili le diverse iterazioni di training effettuate nel corso della sperimentazione.
+
+[TODO spiegare addestramento]
+
 \subsection{Utilizzo del modello NER}
+
 
 
 \section{Approccio basato su servizi gestiti}
