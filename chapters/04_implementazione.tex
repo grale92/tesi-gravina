@@ -8,7 +8,7 @@ In particolare, vengono descritte le principali componenti implementative della 
 
 \subsection{PyMuPDF}
 
-Per l'estrazione del contenuto testuale dei documenti PDF nativi è stata utilizzata la libreria \textbf{PyMuPdf} \cite{pymupdf_docs}, una trasposizione in \textit{Python} del motore di parsing e rendering open source \textit{MuPDF}, progettato per l'elaborazione efficiente di documenti in formato PDF, XPS ed EPUB.
+Per l'estrazione del contenuto testuale dei documenti PDF nativi è stata utilizzata la libreria \textbf{PyMuPdf} \cite{pymupdf-docs}, una trasposizione in \textit{Python} del motore di parsing e rendering open source \textit{MuPDF}, progettato per l'elaborazione efficiente di documenti in formato PDF, XPS ed EPUB.
 
 PyMuPDF consente di accedere direttamente alla rappresentazione interna del documento, permettendo di accedere alle sue componenti fondamentali, secondo il livello di granularità richiesto dall'applicativo. In particolare la libreria offre i seguenti livelli gerarchici di rappresentazione:
 
@@ -31,7 +31,50 @@ La libreria si denota per elevata velocità di elaborazione grazie al motore su 
 
 \subsection{spaCy}
 
+Per l'implementazione del modello di Named Entity Recognition è stata utilizzata la libreria \textbf{spaCy}, una piattaforma open source per il \textit{Natural Language Processing} in Python \cite{spacy-docs}. spaCy fornisce un'architettura modulare e ottimizzata che consente di costruire pipeline di elaborazione del linguaggio naturale basate su modelli neurali addestrabili e personalizzabili.
+
+spaCy adotta un'architettura a pipeline in cui il testo in ingresso viene progressivamente trasformato attraverso una sequenza di componenti. In primo luogo il testo in ingresso viene convertito in un oggetto \texttt{Doc}, che rappresenta la struttura dati centrale della libreria. Il \texttt{Doc} contiene una sequenza ordinata di token, ciascuno dei quali mantiene informazioni legate al testo originale, alla posizione e al contesto. Ogni componente riceve un oggetto \texttt{Doc} come input e può arricchirlo con annotazioni aggiuntive.
+
+Il flusso di elaborazione può essere schematizzato come segue:
+
+\begin{enumerate}
+    \item tokenizzazione del testo
+    \item costruzione delle rappresentazioni vettoriali dei token
+    \item inferenza tramite il modello NER
+    \item produzione delle entità rilevanti come segmenti contigui di token
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/spacy_pipeline.png}
+    \caption{Pipeline di elaborazione di spaCy} asd
+\end{figure}
+
+La componente NER di spaCy è implementata come un modello di \textit{sequence labeling}, il cui obiettivo è assegnare a ciascun token un'etichetta che rappresenta il ruolo semantico del token stesso all'interno di un'entità. Il modello è basato su una rete neurale che combina \textit{embedding} dei token, rappresentazioni del contesto e un classificatore finale che predice le etichette per le varie entità.
+
+A partire da questo modello di base, spaCy consente l'addestramento di modelli personalizzati mediante apprendimento supervisionato. Il processo di training richiede un dataset annotato manualmente, in cui le entità da riconoscere sono etichettate nel testo e permette tramite apposite configurazioni di definire i parametri di ottimizzazione e le modalità di valutazione. 
+
+[TODO] espandere?
+
+\subsection{Doccano}
+
+Per la fase di etichettatura manuale dei dati è stato usato uno strumento open-source chiamato \textbf{Doccano}, una applicazione web-based progettata per l’annotazione di testi e altri task legati ai processi di machine learning \cite{doccano}. L'utilizzo di Doccano è motivato dalla necessità di disporre di un ambiente interattivo che consentisse di annotare in modo efficiente e controllato grandi quantità di testo.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/doccano.jpg}
+    \caption{Interfaccia web di Doccano}
+\end{figure}
+
+La piattaforma permette tra le varie funzionalità di definire un progetto in cui caricare tutti i file testuali in formati comuni (txt, JSON, \dots),  di esportare i dati annotati in diversi formati compatibili con i tool di NLP, ottenendo già dei file da fornire come input per la fase di training del modello di NER.
+
 \subsection{FastAPI}
+
+Per l'implementazione dei servizi web del sistema è stato utilizzato il framework \textbf{FastAPI}, una libreria Python moderna per lo sviluppo di API RESTful, caratterizzata da elevate prestazioni, semplicità di utilizzo e supporto nativo per la validazione dei dati \cite{fastapi_docs}.
+
+FastAPI è basato sullo standard \textit{ASGI (Asynchronous Server Gateway Interface)}, che permette di gestire richieste in parallelo grazie alle funzionalità asincrone offerte da Python. Inoltre la libreria contiene un'integrazione nativa con \textit{Pydantic}, la più comune libreria di Python per la validazione dei dati, che permette utilizzando dei modelli di definire in modo chiaro la struttura dei dati accettati e restituiti dagli endpoint, specificando tipi, campi obbligatori e vincoli di validazione.
+
+L'adozione di FastAPI ha permesso di realizzare un layer di servizi web che espone alle altre componenti del sistema le funzionalità implementate in questo progetto, rispondendo al requisito di integrazione in un contesto applicativo definito da microservizi.
 
 \subsection{Google Cloud Document AI}
 
