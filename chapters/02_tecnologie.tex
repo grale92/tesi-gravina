@@ -186,5 +186,27 @@ Nell'ultimo periodo, i modelli NER basati sul machine learning sono diventati di
     \item I modelli possono essere addestrati end-to-end mediante diminuzione del gradiente, che si basa sul concetto di retro-propagazione dell'errore e metodi di regole della catena.
 \end{enumerate}
 
-[TODO]
+Nell'ambito del machine learning, il NER viene comunemente affrontato come un problema di \textit{sequence labeling}, in cui a ciascun token che compone una sequenza testuale viene assegnata un'etichetta appartenente a un insieme predefinito di classi \cite{jm3}.
+
+L'introduzione delle tecniche di apprendimento automatico hanno consentito il superamento dei limiti delle tecniche basate su regole manuali e dizionari, attraverso modelli statistici in grado di rilevare automaticamente le caratteristiche discriminanti delle entità a partire da testi annotati. Tra i primi esempi di modelli utilizzati troviamo gli \textit{Hidden Markov Models (HMM)} e i \textit{Conditional Random Fields (CRF)}.
+
+Gli Hidden Markov Models appartengono alla classe dei modelli generativi, in quanto definiscono una distribuzione di probabilità congiunta sulle sequenze di osservazioni e sulle corrispondenti etichette \cite{rabiner}. Come evidenziato nella letteratura, tali modelli presentano limiti intrinseci nell'individuazione di caratteristiche complesse e dipendenze a lungo raggio tra le osservazioni, rendendo spesso l'inferenza onerosa a livello computazionale o addirittura ingestibile. Inoltre, l'inclusione di un elevato numero di entità risulta difficilmente gestibile all'interno di un framework generativo \cite{lafferty}.
+
+Per superare queste limitazioni, sono stati introdotti modelli discriminativi per il labeling sequenziale, tra cui i \textit{Maximum Entropy Markov Models (MEMM)}. Sebbene questi modelli consentano di includere un insieme più ricco di entità e di considerare il contesto locale in fase di predizione, essi soffrono del problema detto \textit{label bias problem}, dovuto alla normalizzazione locale delle probabilità di transizione, che può penalizzare la corretta definizione delle dipendenze all'interno di una sequenza.
+
+I Conditional Random Fields rappresentano un'evoluzione significativa in quest'ambito, combinando i vantaggi dei modelli generativi e di quelli discriminativi. Un CRF è un modello probabilistico discriminativo per il labeling sequenziale che stima direttamente la probabilità condizionata di una sequenza di etichette data una sequenza di osservazioni. A livello formale, dato un grafo:
+\[
+G = (V, E)
+\]
+e una collezione di variabili casuali:
+\[
+Y = \{ Y_v \}_{v \in V}
+\]
+in modo che $Y$ sia indicizzato dai vertici di $G$. Allora la coppia $(X, Y)$ definisce un Conditional Random Field se, condizionatamente a $X$, le variabili $Y_v$ soddisfano la proprietà di Markov rispetto al grafo, ovvero se ogni variabile dipende unicamente dalle variabili associate ai nodi adiacenti.
+
+L'addestramento di un CRF avviene massimizzando il logaritmo della funzione di verosimiglianza condizionata dalle etichette osservate rispetto ai dati di input, permettendo al modello di considerare simultaneamente il contesto passato e futuro durante il processo di apprendimento. Questa caratteristica rende i CRF particolarmente adatti a compiti di Named Entity Recognition, nei quali l'etichetta assegnata a un token dipende fortemente dalle informazioni contestuali e dalle altre etichette circostanti.
+
+L'impiego di tali modelli ha rappresentato a lungo lo stato dell'arte nei sistemi NER basati su apprendimento supervisionato, rappresentando una base solida per lo sviluppo di soluzioni più avanzate basate su reti neurali complesse e su architetture \textit{transformer}.
+
+
 
