@@ -152,9 +152,24 @@ Al fine di consentire una valutazione oggettiva delle prestazioni del modello, i
 
 \subsection{Utilizzo del modello NER}
 
-
+[TODO]
 
 \section{Approccio basato su servizi gestiti}
+
+In alternativa alla soluzione custom progettata e descritta nelle sezioni precedenti, è stato considerato un approccio basato sull’utilizzo di servizi gestiti in cloud già esistenti sul mercato, in grado di fornire funzionalità avanzate di analisi documentale e di estrazione delle informazioni. Questo approccio si fonda sull’integrazione di un servizio esterno che espone API dedicate all’elaborazione di documenti non strutturati, delegando al provider cloud le fasi di analisi del contenuto e di riconoscimento delle entità informative.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/flusso_cloud_based.png}
+    \caption{Flusso di integrazione di un servizio cloud-based}
+    \label{fig:flusso_cloud_based}
+\end{figure}
+
+Dal punto di vista progettuale, l'implementazione interna è stata realizzata in maniera tale da semplificare il più possibile per ottenere rapidamente un prototipo funzionante, gestendo esternamente le fasi di feature engineering, di etichettatura e di addestramento. 
+
+L’integrazione con un servizio cloud-based viene progettata come un componente indipendente all’interno dell’architettura applicativa, accessibile tramite interfacce REST e sostituibile senza impatti sulle altre componenti del sistema. In questo modo, il servizio di estrazione delle informazioni può essere visto come una "black box" che riceve in input un documento PDF e restituisce un output strutturato secondo uno schema predefinito, coerente con le esigenze dell’applicazione. Oltre a questo, il servizio si occuperà della fase finale di pulizia e normalizzazione dei dati restituiti dal servizio esterno, in modo da standardizzare l'output rendendolo coerente con quello definito tramite implementazione custom.
+
+Questo approccio presenta tuttavia alcune implicazioni progettuali, legate principalmente alla dipendenza da un servizio esterno, alla limitata possibilità di personalizzazione del modello sottostante e alla questione della sicurezza dei dati nel cloud nell'ambito della gestione dei documenti di input. Lo scopo di tale implementazione è effettuare una valutazione analitica e prestazionale al fine di individuare la soluzione più valida da utilizzare in un ambiente di produzione.
 
 
 \section{Architettura generale della soluzione}
