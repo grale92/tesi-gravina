@@ -26,12 +26,21 @@ Per fare una breve panoramica sull'applicativo, di seguito verranno elencate le 
     \item \textbf{Gestione documentale}. Il sistema consente di caricare documenti di certificazione, audit, test, report di conformità, con la possibilità di associarli a materie prime o prodotti finiti.
     \item \textbf{Pianificazione, scadenze, rinnovi e alert}. Il sistema può gestire scadenze e rinnovi dei certificati con appositi alert pre-configurati, oltre alla generazione automatica di prove di controllo qualità per un articolo o un modello in base ai dati recuperati in anagrafica.
     \item \textbf{Reportistica e dashboard}. Report e dashboard che permettono di monitorare lo stato delle certificazioni, visualizzare i gap e generare evidenze per audit interni/esterni, con la possibilità di esportare i dati in documenti Excel.
-    \item \textbf{Integrazione coi laboratori}. L'applicativo è progettato per interfacciarsi direttamente con i laboratori, consentendo lo scambio di informazioni relative ai test. Oltre al caricamento manuale dei report infatti è disponibile un workflow che regola le richieste, la ricezione e lo stato di avanzamento delle prove, per ridurre i tempi di ricezione dei report e alleggerire il carico operativo degli utenti.
+    \item \textbf{Apertura a laboratori e fornitori}. L'applicativo è progettato per interfacciarsi direttamente con i laboratori e i fornitori, consentendo lo scambio di informazioni relative ai test. Oltre al caricamento manuale dei report infatti è disponibile un workflow che regola le richieste, la ricezione e lo stato di avanzamento delle prove, per ridurre i tempi di ricezione dei report e alleggerire il carico operativo degli utenti.
 \end{itemize}
 
 \section{Criticità del processo attuale}
 
-[TODO]
+L'applicativo descritto risulta sicuramente funzionale per la gestione del processo produttivo, soprattutto per gli utenti interni all'azienda che hanno visto facilitate diverse loro attività e hanno a disposizione più strumenti per analizzare e controllare lo stato dei processi produttivi. Tuttavia, essendo l'applicativo esteso anche a laboratori e fornitori esterni, che non sono inseriti nel contesto aziendale e non hanno una conoscenza così approfondita di codifiche e gerarchie interne, sono state riscontrate alcune criticità relative al flusso di gestione dei report e dei test di certificazione. Di seguito verranno elencate le più rilevanti:
+
+\begin{itemize}
+    \item \textbf{Scarsa automatizzazione}. Il flusso attuale richiede un elevato intervento manuale da parte dell'utente della piattaforma. A partire dall'interpretazione dei documenti PDF, che essendo poco strutturati, necessitano di una fase di interpretazione del contenuto e inserimento manuale dei relativi campi all'interno della piattaforma.
+    \item \textbf{Rischio di errori umani}. Legato al punto precedente, nonostante il flusso preveda una fase di approvazione dei dati inseriti dall'esterno, la probabilità di errori umani non è così rara, soprattutto da parte degli utenti esterni che normalmente non conoscono il dominio ma solo il minimo indispensabile per garantire l'operatività. In un contesto industriale come quello descritto, anche il minimo errore può portare a conseguenze non leggere, vista la rigidità degli standard previsti dalla legge sul tema.
+    \item \textbf{Variabilità dei documenti}. Sul formato dei documenti non esistono standard, e tendenzialmente dipendono dal singolo fornitore o laboratorio che si occupa dei test. Questo ha alcune implicazioni, tra cui la difficoltà anche in fase di validazione a trovare le varie corrispondenze nei dati inseriti, il fatto che seppure lo standard tende ad essere la lingua inglese, possono esserci documenti in lingue diverse che impediscono di automatizzare delle operazioni con semplici regole o di usare un parsing statico.
+    \item \textbf{Formazione degli utenti}. L'azienda per ovviare alle problematiche precedenti, organizza delle sessioni di formazione per i vari utenti esterni all'azienda, generando un notevole dispendio di tempo ed economico, che potrebbe essere evitato avendo a disposizione uno strumento più automatizzato e accessibile.
+\end{itemize}
+
+Tutti questi aspetti hanno portato alla necessità di rivedere almeno in parte il flusso attuale nel tentativo di fornire uno strumento rapido, efficiente e meno soggetto ad errori.
 
 \section{Obiettivi funzionali del progetto}
 
