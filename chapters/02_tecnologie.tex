@@ -208,5 +208,15 @@ L'addestramento di un CRF avviene massimizzando il logaritmo della funzione di v
 
 L'impiego di tali modelli ha rappresentato a lungo lo stato dell'arte nei sistemi NER basati su apprendimento supervisionato, rappresentando una base solida per lo sviluppo di soluzioni più avanzate basate su reti neurali complesse e su architetture \textit{transformer}.
 
+\subsection{NER basato su Reti Neurali e Transformer}
 
+L'uso di reti neurali hanno in primo luogo consentito di ridurre la dipendenza della progettazione manuale delle entità, affidando al modello stesso il compito di estrarre le informazioni rilevanti per il compito di Named Entity Recognition.
+
+Tra i primi approcci di reti neurali applicati alla NER è possibile individuare le \textit{Convolutional Neural Networks (CNN)}, in origine sviluppate per l'elaborazione di dati strutturati come immagini e successivamente adattate al dominio testuale. Le CNN vengono applicate per cattutare pattern locali all'interno delle sequenze di token, attraverso l'applicazione di filtri convoluzionali su finestre di parole adiacenti. Questo metodo risulta efficace nell'individuare sottosequenze rilevanti e strutture locali ricorrenti, portando a un miglioramento della qualità delle rappresentazioni testuali utilizzate per classificare le entità \cite{collobert}.
+
+Tuttavia, le CNN presentano delle limitazioni sulla modellazione di dipendenze a lungo raggio, poiché la loro capacità di integrare informazioni distanti all'interno di una sequenza dipende dalla profondità della rete e dalla dimensione delle finestre convoluzionali. Per superare tale limite, la tendenza è stata passare a modelli in grado di rappresentare il contesto globale della sequenza in modo più efficace.
+
+Un'evoluzione in tal senso è rappresentata dall'introduzione delle architetture \text{Transformer}, fondate interamente su meccanismi di \textit{self-attention}.
+
+[TODO]
 
