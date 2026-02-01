@@ -21,7 +21,7 @@ PyMuPDF consente di accedere direttamente alla rappresentazione interna del docu
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/pymupdf_structure.png}
+    \includegraphics[width=0.8\textwidth]{figures/pymupdf_structure.png}
     \caption{Esempio della struttura gerarchica generata da PyMuPDF}
 \end{figure}
 
@@ -77,6 +77,27 @@ FastAPI è basato sullo standard \textit{ASGI (Asynchronous Server Gateway Inter
 L'adozione di FastAPI ha permesso di realizzare un layer di servizi web che espone alle altre componenti del sistema le funzionalità implementate in questo progetto, rispondendo al requisito di integrazione in un contesto applicativo definito da microservizi.
 
 \subsection{Google Cloud Document AI}
+
+Per l'implementazione del flusso NER utilizzando un servizio cloud-based già preconfigurato, è stato scelto di usare la suite di servizi di \textbf{Google Cloud}. Uno dei motivi che ha fatto pendere la scelta verso questa piattaforma piuttosto che le altre presenti sul mercato, è la presenza di un servizio dedicato all'analisi documentale, chiamato \textbf{Document AI}. Questo servizio è progettato per l'analisi automatica di documenti utilizzando tecniche di machine learning e fornisce una soluzione end-to-end per l'estrazione strutturata di informazioni rilevanti, racchiudendo l'intero ciclo di parsing del testo, riconoscimento del layout e analisi semantica del contenuto.
+
+Il servizio di Document AI è strutturato tramite una divisione in microservizi denominati anche \textit{processori}, di cui ciascuno è specializzato in un compito nell'ambito della gestione documentale. La Figura~\ref{fig:docai_overview} riporta i principali casi d'uso con i relativi processori offerti.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/docai_overview.png}
+    \caption{Diagramma delle funzionalità offerte da Document AI}
+    \label{fig:docai_overview}
+\end{figure}
+
+I processori sono suddivisi per tre task principali:
+
+\begin{itemize}
+    \item \textbf{Digitalizzazione}. Comprende operazioni quali l'estrazione di testo e informazioni sul layout dei documenti utilizzando tecnologie OCR, con la possibilità di analizzare la qualità dell'immagine scansionata di un documento.
+    \item \textbf{Estrazione}. Comprende operazioni quali l'estrazione di tabelle o di form tramite associazione chiave-valore e l'estrazione di entità rilevanti di contesti preaddestrati (ad esempio documenti medici, legali e contabili) o completamente personalizzate tramite etichettatura e addestramento.
+    \item \textbf{Classificazione}. Comprende operazioni che prevedono la classificazione di documenti secondo criteri personalizzabili o anche la separazione di un documento multiclasse secondo classi personalizzate.
+\end{itemize}
+
+Ogni processore è legato a un singolo progetto, una volta creato quest'ultimo e configurato il processore scelto, viene fornita un'API REST che restituisce una rappresentazione strutturata JSON del documento passato in input demandando tutto il costo computazionale al servizio cloud e ai modelli sottostanti.
 
 \section{Implementazione del modello NER}
 
