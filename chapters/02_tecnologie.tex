@@ -216,7 +216,42 @@ Tra i primi approcci di reti neurali applicati alla NER è possibile individuare
 
 Tuttavia, le CNN presentano delle limitazioni sulla modellazione di dipendenze a lungo raggio, poiché la loro capacità di integrare informazioni distanti all'interno di una sequenza dipende dalla profondità della rete e dalla dimensione delle finestre convoluzionali. Per superare tale limite, la tendenza è stata passare a modelli in grado di rappresentare il contesto globale della sequenza in modo più efficace.
 
-Un'evoluzione in tal senso è rappresentata dall'introduzione delle architetture \text{Transformer}, fondate interamente su meccanismi di \textit{self-attention}.
+Un'evoluzione in tal senso è rappresentata dall'introduzione delle architetture \textit{transformer}, che a differenza delle reti convoluzionali, consentono di modellare direttamente le relazioni tra tutti i token di una sequenza, indipendentemente dalla loro distanza, permettendo al modello di definire al meglio le dipendenze globali legate al contesto \cite{vaswani}.
 
-[TODO]
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/transformer_arch.png}
+  \caption{Architettura di un transformer}
+  \label{fig:transformer_arch}
+\end{figure}
+
+I concetti fondamentali di un'architettura transformer, come quella mostrata d'esempio in Figura~\ref{fig:transformer_arch}, possono essere suddivisi nei punti elencati di seguito.
+
+\textbf{Meccanismo di Self-Attention}
+    
+Questo meccanismo è formalizzato anche come \textit{scaled dot-product attention}. Data una matrice di input \( Z \in \mathbb{R}^{n \times d_{\text{model}}} \), vengono calcolate tre matrici $Q$, $K$ e $V$, denominate rispettivamente \textit{query}, \textit{key} e \textit{value}, mediante proiezioni lineari apprese. Il meccanismo di attenzione è definito come:
+
+\[
+\text{Attention}(Q, K, V)
+= \text{softmax}\!\left( \frac{QK^{\top}}{\sqrt{d_k}} \right) V
+\]
+
+dove $d_k$ è la dimensione delle key e $M$ rappresenta una maschera opzionale per limitare le dipendenze ammesse. Questa funzione determina quanto sono rilevanti nel contesto gli altri token della sequenza.
+
+\textbf{Multi-Head Attention}
+
+Il meccanismo di attenzione appena descritto viene replicato su più sottospazi indipendenti, al fine di aumentare la capacità espressiva del modello. Le diverse repliche permettono al modello di catturare simultaneamente diverse tipologie di relazioni, che poi vengono concatenate e reinserite nello spazio $d_{model}$.
+
+\textbf{Feed-Forward Network}
+
+La rete neurale \textit{feed-forward} viene applicata indipendentemente a ciascuna posizione della sequenza. Entrambi i sottoblocchi sono circondati da connessioni residue e normalizzazioni di strato (\textit{Layer Normalization}), che migliorano la stabilità numerica e facilitano l'addestramento di architetture profonde. Tipicamente la rete è formata da due trasformazioni lineari con attivazione \textit{ReLu}.
+
+\textbf{Embeddings}
+
+I transformer non possono lavorare con il testo grezzo ma necessitano di numeri. Pertanto, ogni token di input viene convertito in un vettore, chiamato \textit{embedding}. Questi embedding sono addestrabili, ovvero che il modello impara la miglior rappresentazione numerica per ogni token. Poiché il meccanismo di attenzione è invariante rispetto alle permutazioni, l'informazione relativa all'ordine della sequenza viene incorporata attraverso \textit{positional encoding}, che viene sommato agli embedding dei token. Nel modello originale tali codifiche sono deterministiche e basate su funzioni sinusoidali, permettendo al modello di generalizzare a sequenze di lunghezza non osservata in fase di addestramento.
+
+\textbf{Architettura Encoder-Decoder}
+
+La struttura \textit{encoder-decoder} è la chiave dei modelli transformer. L'\textit{encoder} processa la sequenza di input in un vettore, mentre il \textit{decoder} ri-trasforma questo vettore in una nuova sequenza. Ogni encoder e decoder includono meccanismi di self-attention e livelli feed-forward. Dopo che il decoder ha processato la sequenza, deve predirre il token successivo. L'output del decoder viene passato a un \textit{linear layer} i cui pesi sono condivisi con gli embedding. Infine, la funzione \textit{softmax} converte i punteggi ottenuti in probabilità, da cui si ottiene il token con la probabilità più alta che diventa la successiva parola predetta.
+
 
