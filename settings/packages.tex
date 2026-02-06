@@ -18,8 +18,32 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 
-% Colori (se servono)
+% Codice
+\usepackage{listings}
 \usepackage{xcolor}
+
+\definecolor{bg}{HTML}{FFFFFF}
+\definecolor{keyword}{HTML}{008000}
+\definecolor{comment}{HTML}{6A737D}
+\definecolor{string}{HTML}{A31515}
+\definecolor{linenumber}{HTML}{999999}
+\definecolor{text}{HTML}{000000}
+
+\lstset{
+  backgroundcolor=\color{bg},
+  basicstyle=\ttfamily\small\color{text},
+  keywordstyle=\color{keyword}\bfseries,
+  commentstyle=\color{comment}\itshape,
+  stringstyle=\color{string},
+  numbers=left,
+  numberstyle=\tiny\color{linenumber},
+  stepnumber=1,
+  frame=none,
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false,
+  captionpos=b
+}
 
 % Formule matematiche
 \usepackage{amsmath, amssymb}

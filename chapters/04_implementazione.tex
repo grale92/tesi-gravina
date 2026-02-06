@@ -105,6 +105,85 @@ Ogni processore è legato a un singolo progetto, una volta creato quest'ultimo e
 
 \section{Fine-tuning con Google Cloud}
 
+\subsection{Creazione del Processore}
+
+\textbf{Configurazione iniziale}
+
+La prima fase della realizzazione della pipeline che sfrutta le tecnologie di Google Cloud Document AI consiste nella creazione del progetto cloud e nella configurazione del relativo \textit{Service Account}. Il Service Account rappresenta l’identità applicativa utilizzata per accedere ai servizi Google tramite credenziali dedicate, le quali consentono la generazione di \textit{access token} successivamente utilizzati dall’applicazione per invocare le API del servizio.
+
+Uno degli aspetti fondamentali del Service Account è la possibilità di definire in modo granulare i permessi associati, limitando l’accesso esclusivamente alle funzionalità necessarie al progetto. La gestione delle autorizzazioni può avvenire secondo due livelli principali di granularità:
+
+\begin{itemize}
+    \item \textbf{Ruoli}. Permettono di includere le autorizzazioni necessarie al funzionamento di uno o più specifici servizi di Google, ad esempio per l'utilizzo delle API di Document AI è necessario inserire il ruolo \\ \texttt{roles/documentai.apiUser}. È possibile anche definire dei ruoli personalizzati racchiudendo ruoli e permessi di diverse funzionalità.
+    \item \textbf{Permessi}. Permettono di definire in modo esatto le singole azioni ammesse anche all'interno di un singolo servizio, ad esempio un utente che dovrà avere accesso al bucket dei dati in sola lettura avrà solo il permesso \texttt{storage.bucketOperations.get}, cosa non possibile utilizzando i ruoli.
+\end{itemize}
+
+Completata la configurazione del Service Account ed esportate le credenziali sotto forma di file JSON, si procede alla creazione del processore, che rappresenta il componente centrale del servizio di estrazione documentale utilizzato nel progetto.
+
+Tramite l'interfaccia di Document AI è necessario in primo luogo selezionare la tipologia di processore, che come descritto in precedenza si diversificano oltre che per la funzione svolta anche in soluzioni già preaddestrate, come il modulo OCR che si limita all'estrazione del testo da un documento, e soluzioni custom, che pur partendo sempre da un modello preaddestrato consentono una gestione personalizzata della fase di \textit{fine-tuning} al fine da adattare il modello al contesto d'uso. Per gli scopi di questo lavoro è stato utilizzato il \textbf{Custom Extractor}, per adattare l'estrattore fornito da Google al contesto dei report di laboratorio. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/elenco_processors.png}
+    \caption{Pagina di selezione dei processori di Document AI}
+\end{figure}
+
+\textbf{Feature engineering}
+
+Una volta scelto il tipo di processore, la prima fase è quella della definizione delle entità rilevanti. Le entità vengono create con una comoda interfaccia che permette di definire i seguenti attributi:
+
+\begin{itemize}
+    \item \textit{Name} : identificativo unico per l'etichetta
+    \item \textit{Parent} : è possibile selezionare un'altra etichetta che fungerà da "padre". A differenza di quanto visto nell'implementazione con spaCy, Document AI infatti consente di definire delle etichette composte. Ad esempio: invece di utilizzare due etichette \texttt{TEST\_NAME} e \texttt{TEST\_METHOD}, in questo caso possiamo definire un'etichetta \texttt{test} con due etichette figlie \texttt{name} e \texttt{method}.
+    \item \textit{Method} : un'altra peculiarità di Document AI è la possibilità di definire delle etichette non estratte direttamente dal testo ma derivate tramite analisi del contesto. In questo caso d'uso è stato utile definire tre etichette derivate dal contesto:
+    \begin{itemize}
+        \item \texttt{language}, corrispondente alla lingua del documento, utile per effettuare traduzioni a posteriori e avere i dati coerenti a prescindere dal template utilizzato;
+        \item \texttt{template}, una stringa identificativa dello specifico template del report, anche questa utile per valutazioni a posteriori;
+        \item \texttt{item\_type}, una stringa che può assumere i valori \textit{article} o \textit{style}, indica se il modello sottoposto ai test è un articolo o un modello finito.
+    \end{itemize}
+    \item \textit{Data Type} : è possibile specificare la tipologia del dato, per ottenere delle normalizzazioni del dato già in fase di estrazione. Ad esempio è possibile specificare un campo come \textit{datetime}, e nell'estrarre il dato verrà già restituito in formato \texttt{YYYY\-MM\-DD}.
+    \item \textit{Occurrence} : un'indicazione sul numero di occorrenze che il modello può estrarre per l'etichetta in questione da un singolo documento. È possibile specificare se un'etichetta può comparire una o più volte all'interno di un documento, o anche se può essere assente all'interno del singolo documento.
+    \item \textit{Description} : è un campo testuale libero, in cui è possibile fornire maggiori dettagli sull'etichetta da estrarre. Permette di fare \textit{prompt engineering} sul modello, garantendo un maggiore livello di personalizzazione e aderenza al contesto.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/features_docai.png}
+    \caption{Pagina di creazione delle etichette}
+\end{figure}
+
+\textbf{Gestione del dataset ed etichettatura}
+
+Il passo successivo è la preparazione del dataset per il fine-tuning del modello, che prevede innanzitutto il collegamento col servizio di storage da cui è possibile attingere selezionando le cartelle da cui estrarre i dati. In questa fase è possibile anche definire la suddivisione dei documenti tra \textit{training} e \textit{evaluation}, definendolo esplicitamente o lasciando la suddivisione al sistema che suddividerà l'80\% dei documenti per l'addestramento e il restante 20\% per la valutazione.
+
+Una volta caricati i documenti, è possibile tramite l'interfaccia visualizzarli uno per volta per effettuare l'etichettatura, la quale consiste nel selezionare l'area del documento rilevante e assegnarla a una delle etichette create in precedenza.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/etichettatura_docai.png}
+    \caption{Esempio di etichettatura di un documento}
+\end{figure}
+
+\textbf{Fine-tuning del modello}
+
+Una volta preparato il dataset, si procede andando ad effettuare il fine-tuning di un modello preaddestrato di Google, al fine di migliorarne l'aderenza al contesto specifico. L'interfaccia permette di creare una versione, ovvero un'istanza del modello addestrato, definendo solo come parametri il numero di passi di addestramento e un moltiplicatore al \textit{learning rate} predefinito del modello.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/fine_tuning_docai.png}
+    \caption{Interfaccia di creazione del modello personalizzato}
+\end{figure}
+
+Al termine dell'elaborazione il modello risultante viene deployato ed è accessibile sia per l'analisi dei risultati, forniti sia a livello globale che per singola etichetta. Per l'utilizzo del modello tramite API Google fornisce due identificativi ovvero il \textit{processor\_id} e il \textit{version\_id}, con i quali è possibile individuare l'istanza a cui affidare l'elaborazione dei file passati come parametro.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/risultati_docai.png}
+    \caption{Interfaccia di visualizzazione dei risultati dell'addestramento}
+\end{figure}
+
+\subsection{Implementazione del servizio}
+
 [TODO]
 
 \section{Integrazione con l’applicazione esistente}
