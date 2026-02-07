@@ -4,8 +4,6 @@ In questo capitolo viene approfondita l'analisi del problema delineato nel Capit
 
 I documenti oggetto di studio sono forniti da enti esterni e risultano progettati principalmente per la consultazione umana. Essi non seguono standard strutturali che favoriscono l'elaborazione automatica, anche a causa della presenza di molteplici soggetti a produrli, ciascuno dei quali adotta layout e impaginazioni differenti. La complessità della struttura è accentuata dall'utilizzo di tabelle, colonne multiple e testi multilingua, elementi che impediscono l'estrazione sistematica delle informazioni.
 
-[immagine esempio documento]
-
 Il problema affrontato nel progetto consiste nell'individuare una strategia efficace per trasformare documenti eterogenei e rumorosi in una rappresentazione strutturata, attraverso l'identificazione automatica di entità rilevanti. A tal fine sono stati presi in considerazione due approcci differenti: una soluzione cloud-based basata su un prodotto già disponibile sul mercato e una soluzione custom che implementa l'intero processo, dalla fase di estrazione del contenuto testuale del file fino all'addestramento e all'utilizzo del modello dedicato per l'estrazione automatica delle entità.
 
 \section{Caso d'uso}
@@ -171,11 +169,24 @@ L’integrazione con un servizio cloud-based viene progettata come un componente
 
 Questo approccio presenta tuttavia alcune implicazioni progettuali, legate principalmente alla dipendenza da un servizio esterno, alla limitata possibilità di personalizzazione del modello sottostante e alla questione della sicurezza dei dati nel cloud nell'ambito della gestione dei documenti di input. Lo scopo di tale implementazione è effettuare una valutazione analitica e prestazionale al fine di individuare la soluzione più valida da utilizzare in un ambiente di produzione.
 
-
-\section{Architettura generale della soluzione}
-
-[TODO]
-
 \section{Strategie di associazione documento-entità}
 
-[TODO]
+Per evidenziare al meglio le peculiarità del processo di estrazione automatica delle informazioni, è necessario fare una panoramica sulla selezione delle entità effettuata. I documenti di input, contengono una grande quantità di informazioni eterogenee e di rumore, tra cui dati anagrafici del laboratorio, riferimenti normativi, descrizioni testuali e fotografiche del campione, dati amministrativi e risultati delle prove. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figures/report_facsimile.png}
+    \caption{Fac-simile di un report di laboratorio}
+\end{figure}
+
+Tuttavia, come emerso in fase di analisi dei requisiti, lo scopo finale è quello di permettere all'utente di validare in modo rapido i test effettuati su uno specifico articolo o modello finito, pertanto i dati rilevanti da raccogliere sono una piccola parte e nel raggiungere l'obiettivo designato è stato necessario operare una riduzione mirata dello spazio informativo, individuando un insieme ristretto di entità considerate rilevanti e in comune tra i diversi template documentali.
+
+In particolare, di seguito verranno analizzate, senza scendere in dettagli legati alla base dati, le categorie di dati da estrarre e le loro relazioni:
+
+\begin{itemize}
+    \item \textbf{Identificativo del campione} : può essere il codice dell'articolo o di un modello finito, costituisce l'entità che fornisce il collegamento diretto al database aziendale
+    \item \textbf{Dati descrittivi del campione} : sono dati di supporto all'identificativo che permettono di inquadrare meglio il campione, come l'anno stagione della collezione, il brand (una società di abbigliamento in genere gestisce più brand), il colore o la variante a seconda del tipo di campione.
+    \item \textbf{Informazioni associate al report} : principalmente il numero identificativo del report e il periodo di test. Sono informazioni che nel flusso standard vengono inserite manualmente da parte dell'utente e associate ai record relativi alle prove.
+    \item \textbf{Fornitore o richiedente} : costituisce l'entità che è legata alla richiesta dei test oppure che gestisce la fase di esecuzione dei test. Individuare il campione infatti non è sufficiente per distinguere esattamente i record relativi a una prova, potenzialmente lo stesso campione può essere legato a fornitori diversi.
+    \item \textbf{Standard di prova e metodi di test} : comprendono i riferimenti normativi (ad esempio norme GB/T o ISO), sono informazioni che vanno a legare il campione ai record delle singole prove. Lo standard, se definito nel documento permette di estrarre un pacchetto di prove necessarie al rispetto dello standard in questione, in alternativa o in aggiunta, sono elencate all'interno di un report le singole prove col relativo metodo di test. Il nome della prova non costituisce tuttavia un legame solido ma richiede una verifica per similarità, cosa non veritiera invece per il metodo dei test, che può essere individuato direttamente sulla base dati.
+\end{itemize}

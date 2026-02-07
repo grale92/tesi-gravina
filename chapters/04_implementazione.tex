@@ -8,7 +8,7 @@ In particolare, vengono descritte le principali componenti implementative della 
 
 \subsection{PyMuPDF}
 
-Per l'estrazione del contenuto testuale dei documenti PDF nativi è stata utilizzata la libreria \textbf{PyMuPdf} \cite{pymupdf-docs}, una trasposizione in \textit{Python} del motore di parsing e rendering open source \textit{MuPDF}, progettato per l'elaborazione efficiente di documenti in formato PDF, XPS ed EPUB.
+Per l'estrazione del contenuto testuale dei documenti PDF nativi è stata utilizzata la libreria \textbf{PyMuPdf} \cite{pymupdf-docs} (anche nota come \textit{fitz}), una trasposizione in \textit{Python} del motore di parsing e rendering open source \textit{MuPDF}, progettato per l'elaborazione efficiente di documenti in formato PDF, XPS ed EPUB.
 
 PyMuPDF consente di accedere direttamente alla rappresentazione interna del documento, permettendo di accedere alle sue componenti fondamentali, secondo il livello di granularità richiesto dall'applicativo. In particolare la libreria offre i seguenti livelli gerarchici di rappresentazione:
 
@@ -101,7 +101,59 @@ Ogni processore è legato a un singolo progetto, una volta creato quest'ultimo e
 
 \section{Implementazione del modello NER}
 
-[TODO]
+\subsection{Struttura del progetto e organizzazione del codice}
+
+L’implementazione è stata sviluppata e distribuita all’interno di un ambiente containerizzato mediante \textbf{Docker} \cite{docker}. Tale scelta progettuale consente di definire in modo esplicito e riproducibile l'ambiente di esecuzione dell'intero sistema, includendo le dipendenze software, le versioni delle librerie utilizzate e le configurazioni necessarie al corretto funzionamento delle diverse componenti. 
+
+All’interno del container, il progetto è stato organizzato con l’obiettivo di separare in modo chiaro le responsabilità delle diverse componenti e favorire la manutenibilità e l’estendibilità del sistema. In particolare questa è la suddivisione delle cartelle di progetto:
+
+\begin{itemize}
+    \item \textbf{app} : contiene il servizio web esposto dal container, in particolare il file \texttt{main.py} contiene l'inizializzazione del server, mentre il resto delle logiche è implementato nelle sottocartelle indicate di seguito.
+    \begin{itemize}
+        \item \textbf{api} : contiene le routes esposte
+        \item \textbf{schemas} : contiene i modelli di dati strutturati utilizzati nell'applicazione
+        \item \textbf{services} : contiene le logiche applicative suddivise per funzione
+        \item \textbf{utils} : contiene funzioni di utilità comuni ad esempio per la fase di normalizzazione dei dati
+    \end{itemize}
+    \item \textbf{data} : rappresenta lo storage dell'applicativo, in particolare contiene il dataset per il training, sia nel loro formato iniziale ovvero PDF, sia i relativi file ottenuti dalle varie fasi di estrazione del testo. Inoltre contiene il modello addestrato che viene utilizzato per le funzioni di NER ed eventuali configurazioni.
+    \item \textbf{scripts} : contiene le componenti applicative della pipeline di training
+\end{itemize}
+
+Questa organizzazione consente di mantenere una netta separazione tra le fasi sperimentali di sviluppo del modello e le componenti destinate all’utilizzo operativo, riducendo l’accoppiamento tra le parti e rendendo il sistema più semplice da estendere o modificare nel tempo.
+
+\subsection{Estrazione del testo e preparazione del dataset per l'etichettatura}
+
+Per la preparazione del dataset alla fase di etichettatura è stato realizzato un batch che esegue in sequenza tre script Python, altamente configurabili attraverso l'uso dei parametri. Il batch prende in input una cartella da cui leggere i documenti PDF e restituisce un file \textit{JSONL}, formato accettato da Doccano per la fase di etichettatura.
+
+Il primo script \texttt{export\_lines\_json} si occupa di trasformare il PDF nativo in una rappresentazione strutturata e utilizzabile per la fase di segmentazione, a tale scopo viene utilizzato PyMuPDF, che grazie alle informazioni spaziali e di impaginazione consente di applicare funzioni di elaborazione che rendono il testo più pulito e organizzato rispetto a una semplice estrazione grezza. Lo script lavora pagina per pagina a partire dal testo grezzo estratto, su cui esegue le seguenti operazioni:
+
+\begin{enumerate}
+    \item \textbf{Pulizia del testo}. Viene effettuata una rimozione di spazi, caratteri speciali o non utili ai fini del training (es. in alcuni documenti è presente sotto alla dicitura in inglese la rispettiva traduzione in cinese).
+    \item \textbf{Riconoscimento delle strutture tabellari}. PyMuPDF offre una funzione \texttt{Page.get\_drawings()} che permette di estrarre tutte le grafiche vettoriali presenti all'interno di una pagina e ne riconosce la tipologia. Questa funzione viene utilizzata per estrarre le righe verticali e i rettangoli che formano una tabella, al fine di ricostruire l'ordine logico del testo e usare dei separatori (\texttt{|}) per simulare la struttura tabellare. Nel caso non siano disponibili o non siano affidabili le informazioni sui disegni vettoriali, si cerca di fare clustering sulla coordinata \texttt{x} per individuare delle colonne logiche.
+    \item \textbf{Suddivisione in righe e Clustering}. Facendo clustering sulla coordinata $y$ invece le parole vengono raggruppate in linee visive, il risultato è un insieme righe ordinato in base alla posizione sulla pagina.
+    \item \textbf{Merge delle righe collegate e pulizia finale}. A partire dalle righe e dalla loro rappresentazione in colonne (a fianco del testo grezzo con i separatori si ottiene anche un \textit{array} di stringhe) viene applicata una fase di merging che va ad esempio a individuare righe dove una sola colonna è valorizzata e le altre no, in questo caso siamo di fronte a una continuazione della colonna soprastante. Infine si applica una pulizia finale che va a rimuovere righe riconosciute come rumorose ad esempio vari header/footer.
+\end{enumerate}
+
+Di seguito un esempio di riga ottenuta come output dalle operazioni appena elencate:
+
+\begin{lstlisting}
+{
+    "y": 300.2481384277344,
+    "bbox": [
+        37.919986724853516, 300.2481384277344, 
+        548.5767211914062, 322.925537109375
+    ],
+    "cols": [
+        "", "Colorfastness to Alkaline perspiration", 
+        "Grade", "GB/T 3922-2013", "\≥ 3, 
+        "Polyester 4-5", "Pass"
+    ],
+    "text": "Colorfastness to Alkaline perspiration
+     | Grade | GB/T 3922-2013 | \≥ 3 | Polyester 4-5 | Pass"
+},
+\end{lstlisting}
+
+\subsection{Servizio web per l'estrazione delle entità}
 
 \section{Fine-tuning con Google Cloud}
 
