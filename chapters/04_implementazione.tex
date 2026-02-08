@@ -60,13 +60,7 @@ A partire da questo modello di base, spaCy consente l'addestramento di modelli p
 
 Per la fase di etichettatura manuale dei dati è stato usato uno strumento open-source chiamato \textbf{Doccano}, una applicazione web-based progettata per l’annotazione di testi e altri task legati ai processi di machine learning \cite{doccano}. L'utilizzo di Doccano è motivato dalla necessità di disporre di un ambiente interattivo che consentisse di annotare in modo efficiente e controllato grandi quantità di testo.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/doccano.jpg}
-    \caption{Interfaccia web di Doccano}
-\end{figure}
-
-La piattaforma permette tra le varie funzionalità di definire un progetto in cui caricare tutti i file testuali in formati comuni (txt, JSON, \dots),  di esportare i dati annotati in diversi formati compatibili con i tool di NLP, ottenendo già dei file da fornire come input per la fase di training del modello di NER.
+La piattaforma supporta vari task legati ai dataset per i processi di machine learning, tra cui classificazione ed etichettatura di immagini o testi, in particolare per lo scopo del progetto fornisce una funzionalità chiamata \textit{Sequence Labeling}, in cui è possibile caricare dei file testuali in formati comuni (txt, JSON, \dots) e di esportare i dati annotati in formati compatibili con i tool di NLP, ottenendo già dei file da fornire come input per la fase di training del modello di NER.
 
 \subsection{FastAPI}
 
@@ -123,7 +117,7 @@ Questa organizzazione consente di mantenere una netta separazione tra le fasi sp
 
 \subsection{Estrazione del testo e preparazione del dataset per l'etichettatura}
 
-Per la preparazione del dataset alla fase di etichettatura è stato realizzato un batch che esegue in sequenza tre script Python, altamente configurabili attraverso l'uso dei parametri. Il batch prende in input una cartella da cui leggere i documenti PDF e restituisce un file \textit{JSONL}, formato accettato da Doccano per la fase di etichettatura.
+Per la preparazione del dataset alla fase di etichettatura è stato realizzato un batch che esegue in sequenza tre script Python, altamente configurabili attraverso tuning dei parametri. Il batch prende in input una cartella da cui leggere i documenti PDF e restituisce un file \textit{JSONL}, formato accettato da Doccano per la fase di etichettatura.
 
 Il primo script \texttt{export\_lines\_json} si occupa di trasformare il PDF nativo in una rappresentazione strutturata e utilizzabile per la fase di segmentazione, a tale scopo viene utilizzato PyMuPDF, che grazie alle informazioni spaziali e di impaginazione consente di applicare funzioni di elaborazione che rendono il testo più pulito e organizzato rispetto a una semplice estrazione grezza. Lo script lavora pagina per pagina a partire dal testo grezzo estratto, su cui esegue le seguenti operazioni:
 
@@ -146,12 +140,81 @@ Di seguito un esempio di riga ottenuta come output dalle operazioni appena elenc
     ],
     "cols": [
         "", "Colorfastness to Alkaline perspiration", 
-        "Grade", "GB/T 3922-2013", "\≥ 3, 
+        "Grade", "GB/T 3922-2013", "Color staining > 3, 
         "Polyester 4-5", "Pass"
     ],
-    "text": "Colorfastness to Alkaline perspiration | Grade | GB/T 3922-2013 | \≥ 3 | Polyester 4-5 | Pass"
+    "text": "Colorfastness to Alkaline perspiration | Grade | GB/T 3922-2013 | Color staining > 3 | Polyester 4-5 | Pass"
 },
 \end{lstlisting}
+
+La fase successiva, ovvero la segmentazione in finestre testuali, viene gestita dallo script \texttt{build\_spacy\_windows.py}. La necessità di creare finestre nasce dalla necessità in primo luogo di non dover fornire al modello l'intero testo estratto dal PDF, per evitare un input rumoroso e efficientarne le prestazioni; da un altro punto di vista, le singole righe invece spesso non contengono sufficiente contesto locale per interpretare correttamente le entità.
+
+Dal punto di vista implementativo, lo script ordina le linee per pagina e posizione verticale e le unisce in finestre testuali usando principalmente due parametri: la dimensione della finestra (\texttt{window\_size}) e il passo di avanzamento (\texttt{stride}). Il tuning di questi due parametri permettono di bilanciare copertura del documento e ridondanza: \texttt{stride} ridotto aumenta la probabilità che che un'entità compaia integralmente almeno in una finestra, mentre valori più elevati riducono il numero totale di esempi da annotare. Per quanto riguarda la \texttt{window\_size} i migliori risultati sia a livello di efficienza che di precisione del modello sono stati riscontrati con finestre da 7 righe. Una volta create le finestre vengono applicate ulteriori funzioni di pulizia usando \textit{regex} per individuare finestre con testo molto rumoroso o ritenuto non rilevante, in modo da evitare di avere troppe finestre senza entità rilevanti al loro interno.
+
+L'ultima fase della preparazione del dataset è gestita dallo script \\\texttt{windows\_to\_spacy\_jsonl.py}, che rielabora gli output precedenti per preparare il file di input della fase di etichettatura rispettando un formato supportato da Doccano.
+Di seguito è possibile vedere un esempio di un frammento del file relativo a una finestra testuale:
+
+\begin{lstlisting}
+    {
+        "text": "BLOCCO TESTUALE DELLA FINESTRA", 
+        "label": [], 
+        "meta": {
+            "source_pdf": "/data/pdf/15-097-66240980285.pdf", 
+            "page": 1, 
+            "window": 7, 
+            "stride": 2, 
+            "start_line": 2, 
+            "end_line": 8
+        }
+    }
+\end{lstlisting}
+
+il campo \texttt{label} verrà riempito dalla fase di etichettatura contenendo le entità trovate all'interno della finestra testuale, mentre i metadati dentro la chiave \texttt{meta} non vengono direttamente utilizzati dal modello ma servono più per debug e tracciabilità.
+
+\subsection{Feature engineering ed etichettatura}
+
+In questa fase è stato utilizzato il tool open-source Doccano, avviabile in un webserver locale anche tramite Docker, con i seguenti comandi:
+
+\begin{lstlisting}[language=bash]
+docker pull doccano/doccano
+docker container create --name doccano \
+  -e "ADMIN_USERNAME=admin" \
+  -e "ADMIN_EMAIL=admin@example.com" \
+  -e "ADMIN_PASSWORD=password" \
+  -v doccano-db:/data \
+  -p 8000:8000 doccano/doccano
+\end{lstlisting}
+
+La creazione di un utente \textit{admin} è necessaria perché la piattaforma può essere gestita a tutti gli effetti con un sistema di utenti con ruoli e permessi specifici. Una volta aperta l'interfaccia e creato il progetto, per poter iniziare l'etichettatura è necessario innanzitutto creare le etichette tramite l'apposita pagina \textit{Labels}, dove la fase di selezione delle entità rilevanti è stata effettuata seguendo i criteri indicati nella Sezione~\ref{sec:associazione-documento-entita}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/labels_doccano.png}
+    \caption{Pagina di creazione etichette di Doccano}
+\end{figure}
+
+A questo punto dalla pagina \textit{Dataset} è possibile importare il file ottenuto negli step precedenti, e per ogni riga presente nel file verrà creato un frammento di testo da annotare, a cui è assegnato un identificativo univoco e su cui è possibile cliccare per procedere con l'annotazione delle entità. Una volta evidenziate nel testo le porzioni rilevanti e assegnate alle etichette, è necessario contrassegnare il frammento come \textit{checked} per indicare che l'operazione è completata, e sulla parte destra della pagina è possibile verificare lo stato corrente delle annotazioni effettuate.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/annotations_doccano.png}
+    \caption{Etichettatura delle finestre testuali su Doccano}
+\end{figure}
+
+Una volta terminato il processo manuale di etichettatura, è possibile esportare i dati sempre in formato JSONL con il campo \texttt{label} riempito per ogni finestra testuale da una lista di triple formate da:
+
+\begin{itemize}
+    \item indice del carattere iniziale del valore etichettato
+    \item indice del carattere finale del valore etichettato
+    \item stringa con il nome dell'etichetta assegnata
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/export_doccano.png}
+    \caption{Pagina di esportazione dati di Doccano}
+\end{figure}
+
 
 \subsection{Servizio web per l'estrazione delle entità}
 
