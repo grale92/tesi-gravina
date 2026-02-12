@@ -215,6 +215,77 @@ Una volta terminato il processo manuale di etichettatura, è possibile esportare
     \caption{Pagina di esportazione dati di Doccano}
 \end{figure}
 
+\subsection{Addestramento del modello}
+
+\subsubsection{Costruzione del dataset e addestramento del modello}
+
+Il file JSONL, pur essendo semplice e leggibile, non è direttamente utilizzabile dal motore di training utilizzato ovvero spaCy. Per questo motivo è stato introdotto un ulteriore step realizzato tramite script Python \texttt{jsonl\_to\_docbin.py}, con lo scopo di convertire il dataset annotato nel formato binario nativo di spaCy (\texttt{DocBin}), richiesto dalla procedura di addestramento.
+
+Nel dettaglio il seguente blocco di codice estratto dallo script fornisce la logica con cui viene inizializzato il modello.
+
+\begin{lstlisting}[language=Python]
+    random.seed(args.seed)
+
+	nlp = spacy.blank(args.lang)
+
+	examples = []
+	with open(args.inp, "r", encoding="utf-8") as f:
+		for line in f:
+			line = line.strip()
+			if not line:
+				continue
+			obj = json.loads(line)
+
+			text = obj.get("text", "")
+			labels = obj.get("label", [])  # Doccano field
+
+			doc = nlp.make_doc(text)
+			ents = []
+			for start, end, lab in labels:
+				start = int(start); end = int(end)
+				span = doc.char_span(start, end, label=lab, alignment_mode="contract")
+				if span is None:
+					continue
+				ents.append(span)
+
+			doc.ents = ents
+			examples.append(doc)
+
+	if not examples:
+		raise SystemExit("No examples found. Input file is empty")
+
+	random.shuffle(examples)
+	split = int(len(examples) * (1.0 - args.dev_ratio))
+	train_docs = examples[:split]
+	dev_docs = examples[split:]
+
+	train_bin = DocBin(store_user_data=True)
+	dev_bin = DocBin(store_user_data=True)
+
+	for d in train_docs:
+		train_bin.add(d)
+	for d in dev_docs:
+		dev_bin.add(d)
+\end{lstlisting}
+
+In primo luogo l'inizializzazione del modello avviene con la funzione \\ \texttt{spacy.blank()}, a cui viene fornita in input solo la lingua passata come argomento che indirizza in modo corretto la fase di tokenizzazione.
+
+Una volta caricato il file JSONL ottenuto dalla fase di etichettatura, per ogni riga del file (che corrisponde a una finestra testuale), viene creato un oggetto \texttt{Doc} ovvero il testo tokenizzato, a cui poi vengono collegate le etichette tramite la funzione \texttt{Doc.char\_span()} che va a definire uno \texttt{Span}, ovvero una porzione di token.
+
+A questo punto vengono definiti i dataset di addestramento e valutazione in formato \texttt{DocBin}, ideale per ottimizzare le prestazioni del motore di spaCy, secondo la proporzione definita dall'argomento \texttt{dev\_ratio}, ovvero il valore in percentuale del dataset di evaluation. Per fare ciò prima della divisione dei dataset vengono mischiati tutti i campioni tramite un seed passabile come argomento al fine di rendere il processo di training osservabile e ripetibile.
+
+Al termine dello script i due dataset vengono salvati pronti per essere utilizzati nella fase di training, la quale viene eseguita direttamente da terminale all'interno del container utilizzando il seguente comando:
+
+\begin{lstlisting}
+docker compose run --rm ocr-ml \
+python -m spacy train /data/spacy/config.cfg \
+--output /data/spacy/model \
+--paths.train /data/spacy/train.spacy \
+--paths.dev /data/spacy/dev.spacy
+\end{lstlisting}
+
+Il processo genera nella cartella indicata di output una directory contenente i vari modelli ottenuti nel ciclo di addestramento, con una \texttt{model\_best} contenente la configurazione con le migliori prestazioni ottenute sui dati di valutazione.
+
 
 \subsection{Servizio web per l'estrazione delle entità}
 
