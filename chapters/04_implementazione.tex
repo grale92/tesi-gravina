@@ -78,7 +78,7 @@ Il servizio di Document AI è strutturato tramite una divisione in microservizi 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{figures/docai_overview.png}
+    \includegraphics[width=0.9\textwidth]{figures/docai_overview.png}
     \caption{Diagramma delle funzionalità offerte da Document AI}
     \label{fig:docai_overview}
 \end{figure}
@@ -284,10 +284,47 @@ python -m spacy train /data/spacy/config.cfg \
 --paths.dev /data/spacy/dev.spacy
 \end{lstlisting}
 
-Il processo genera nella cartella indicata di output una directory contenente i vari modelli ottenuti nel ciclo di addestramento, con una \texttt{model\_best} contenente la configurazione con le migliori prestazioni ottenute sui dati di valutazione.
-
+Il processo genera nella cartella indicata di output una directory contenente i vari modelli ottenuti nel ciclo di addestramento, con una \texttt{model\_best} contenente la configurazione con i migliori risultati ottenuti sui dati di valutazione.
 
 \subsection{Servizio web per l'estrazione delle entità}
+
+Per consentire l'utilizzo del modello NER in un contesto applicativo, è stato realizzato un servizio web in Python basato su FastAPI. Il servizio espone un endpoint REST che riceve in input un documento PDF e restituisce un output strutturato contenente le entità riconosciute. Il flusso operativo del servizio può essere sintetizzato nei seguenti passaggi:
+\begin{enumerate}
+    \item \textbf{Acquisizione del documento}: La classe \texttt{UploadFile} consente di gestire il file come \textit{multipart/form-data} e ricevarne il contenuto.
+    \item \textbf{Parsing e segmentazione}: il PDF viene elaborato per estrarre e segmentare il contenuto testuale in finestre, applicando la stessa logica utilizzata nella pipeline di training, al fine di garantire coerenza tra fase di addestramento e fase di inferenza.
+    \item \textbf{Predizione}: ciascuna finestra viene processata dal modello spaCy addestrato, ottenendo le \textit{label} estratte.
+    \item \textbf{Post-processing e normalizzazione}: le entità estratte vengono aggregate e normalizzate in un formato JSON coerente con le esigenze applicative, indipendente dal motore di estrazione (modello custom o soluzione cloud-based).
+\end{enumerate}
+
+\begin{lstlisting}[language=Python]
+@router.post("/parse", response_model=SpacyParseResponse)
+async def spacy_parse(
+	file: UploadFile = File(...),
+	pdf_parser: PdfParserService = Depends(get_pdf_parser_service),
+	ner: SpacyNerService = Depends(get_spacy_ner_service),
+):
+	if file.content_type != "application/pdf":
+		raise HTTPException(status_code=415, detail=f"Unsupported content_type: {file.content_type}")
+
+	content = await file.read()
+	if not content:
+		raise HTTPException(status_code=400, detail="Empty file")
+
+	parsed = pdf_parser.parse(content)
+	windows = parsed["windows"]
+
+	# windows -> NER
+	preds = ner.predict_windows(windows, normalize=True)
+
+	normalized = normalize_spacy_entities(by_window=preds, debug=False)
+
+	return {
+		"filename": file.filename,
+		**normalized
+	}
+\end{lstlisting}
+
+Un aspetto rilevante per l'uso operativo riguarda la gestione del caricamento del modello spaCy. Poiché l'inizializzazione del modello può essere onerosa, il modello viene caricato una sola volta e riutilizzato per le richieste successive, evitando costi ripetuti e migliorando la latenza. Questo poiché FastAPI fornisce la classe \texttt{Depends} che consente di fare \textit{dependency injection} integrando delle classi di servizi, in particolare il caricamento del modello avviene all'inizializzazione del servizio \texttt{SpacyNerService}, mentre \texttt{PdfParserService}, si occupa della fase preliminare di estrazione del testo e segmentazione.
 
 \section{Fine-tuning con Google Cloud}
 
@@ -368,9 +405,55 @@ Al termine dell'elaborazione il modello risultante viene deployato ed è accessi
     \caption{Interfaccia di visualizzazione dei risultati dell'addestramento}
 \end{figure}
 
-\subsection{Implementazione del servizio}
+\subsection{Integrazione di Google Document AI in un servizio web}
 
-[TODO]
+In parallelo alla soluzione custom basata su modello NER addestrato internamente, è stato implementato un servizio web alternativo che fa orchestratore tra l'interfaccia web e l'API esposta dal provider esterno.
+
+L'endpoint REST, realizzato anch'esso mediante FastAPI, ha la medesima struttura a livello di input e output. La differenza sta nel fatto che il file viene inoltrato al servizio Google Document AI utilizzando l’SDK ufficiale Python, previa autenticazione tramite Service Account. L’invocazione del servizio avviene specificando il progetto, la regione e l’identificativo del processor precedentemente configurato su Google Cloud.
+
+\begin{lstlisting}[language=Python]
+@router.post("/parse", response_model=DocAiParseResponse)
+async def docai_parse(
+	file: UploadFile = File(...),
+	docai: DocumentAiService = Depends(get_docai_service),
+):
+	if file.content_type not in ("application/pdf", "image/tiff", "image/png", "image/jpeg"):
+		raise HTTPException(status_code=415, detail=f"Unsupported content_type: {file.content_type}")
+
+	content = await file.read()
+	if not content:
+		raise HTTPException(status_code=400, detail="Empty file")
+
+	try:
+		result = docai.process_bytes(content, file.content_type)
+	except Exception as e:
+		raise HTTPException(status_code=502, detail=f"Document AI error: {e}")
+
+	doc = result.document
+	parsed = normalize_docai_entities(doc, debug=DEBUG)
+
+	return {
+		"filename": file.filename,
+		**parsed,
+	}   
+\end{lstlisting}
+
+Come si può notare dal codice in quest'implementazione la dipendenza è un \texttt{DocumentAiService} che si occupa dell'inizializzazione del client Google Cloud e dell'invocazione dei servizi esterni. La funzione \texttt{process\_bytes} contiene la seguente logica:
+
+\begin{enumerate}
+    \item Creazione di un oggetto \texttt{RawDocument} passando direttamente il contenuto in bytes del PDF, per convertirlo in un oggetto accettato da Document AI.
+    \item Creazione del payload della richiesta, incapsulato in un oggetto \\ \texttt{ProcessRequest} che prende in input il \texttt{RawDocument} e il nome del processore
+    \item Chiamata verso il servizio di inferenza di Document AI e restituzione dell'output fornito.
+\end{enumerate}
+
+\begin{lstlisting}[language=Python]
+def process_bytes(self, content: bytes, mime_type: str):
+    raw_document = documentai.RawDocument(content=content, mime_type=mime_type)
+    request = documentai.ProcessRequest(name=self.processor_name(), raw_document=raw_document)
+    return self.client.process_document(request=request)
+\end{lstlisting}
+
+In questo caso la fase di normalizzazione prevede una rielaborazione dell'output fornito da Google che è molto strutturato e ricco di metadati. Tra le varie informazioni che vengono fornite su cui è possibile fare delle valutazioni a posteriori, per ogni entità predetta viene indicato un valore \texttt{confidence}, compreso tra $0$ e $1$, che indica la probabilità di correttezza del dato estratto. Nella fase di normalizzazione è stato scelto di escludere tutte le entità con una \texttt{confidence} inferiore a $0.50$, per evitare nell'uso applicativo di utilizzare filtri sui dati tendenzialmente non corretti.
 
 \section{Integrazione con l’applicazione esistente}
 

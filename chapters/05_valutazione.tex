@@ -1,5 +1,45 @@
 \chapter{Valutazione dei risultati e confronto}
 
+In questo capitolo vengono presentati e analizzati i risultati sperimentali ottenuti dalle due soluzioni implementate: il modello NER custom sviluppato con spaCy e il modello configurato tramite Google Cloud Document AI. L'obiettivo è confrontare le prestazioni dei due approcci sia dal punto di vista quantitativo, attraverso le metriche standard dei modelli di Named Entity Recognition, sia sotto il profilo qualitativo che progettuale, al fine di valutarne l'effettiva applicabilità nel contesto aziendale descritto nei capitoli precedenti.
+
+Prima di esporre i risultati è necessario precisare alcune differenze nei dataset utilizzati per la valutazione. Per quanto riguarda Google Document AI, il modello è stato valutato su un insieme di 43 documenti. Il modello NER sviluppato con spaCy, invece, è stato valutato su 31 documenti. Tale discrepanza è dovuta al fatto che, durante l'implementazione delle fasi di pre-processing e segmentazione per la soluzione custom, l'analisi si è concentrata su un numero più ristretto di template documentali, in modo da valutare meglio l'efficacia delle migliorie introdotte e ridurre la variabilità.
+
+È inoltre importante evidenziare che, nel caso del modello spaCy, la valutazione non avviene direttamente a livello di documento intero, ma su finestre testuali derivate dalla fase di segmentazione. Le metriche vengono quindi calcolate su tali frammenti di testo e non sui documenti nella loro interezza. Questo comporta che alcune entità possano comparire in più finestre appartenenti allo stesso documento, influenzando le statistiche aggregate e potenzialmente producendo valori più elevati rispetto a una valutazione effettuata a livello documentale.
+
+Queste differenze metodologiche sono cruciali al fine di interpretare i risultati qualititivi ed il confronto tra le due soluzioni.
+
 \section{Risultati sperimentali}
 
-\section{Discussione dei risultati}
+Dai risultati della valutazione utilizzando le metriche a livello globale sui due modelli e mostrati in Figura~\ref{fig:overall_metrics}, emerge che a ottenere le migliori prestazioni è stato il modello custom realizzato con spaCy, ottenendo un F1-score di $0.96$ a fronte di un $0.85$ ottenuto dal modello configurato con Google Document AI.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/compare_overall_metrics.png}
+    \caption{Grafico di confronto metriche di valutazione dei modelli NER}
+    \label{fig:overall_metrics}
+\end{figure}
+
+È possibile andare a vedere nel dettaglio i risultati suddivisi per alcune entità, mostrandone i relativi F1-score ottenuti nelle due soluzioni proposte.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/compare_entity_f1_clean.png}
+    \caption{Grafico di confronto F1-score su specifiche entità}
+    \label{fig:compare_entity_f1}
+\end{figure}
+
+Si può osservare che le principali problematiche per il modello di Document AI sono state rilevate nel predirre le informazioni relative alle prove (\texttt{TEXT\_NAME} e \texttt{TEXT\_METHOD}), oltre che al codice dell'articolo o prodotto coinvolto (\texttt{ARTICLE\_NO}).
+
+Riguardo entrambi i grafici, è possibile e doveroso fare delle considerazioni per comprendere al meglio i risultati, prima di passare a una successiva fase di valutazione a livello complessivo delle due soluzioni.
+
+\textbf{Il ruolo della riduzione di rumore}
+
+Oltre a quanto affermato nelle premesse di inizio capitolo, uno dei principali motivi per cui l'implementazione di spaCy ha ottenuto i risultati migliori è dovuta alle fasi di pre-processing e segmentazione. Sono state infatti effettuate numerose operazioni di manipolazione sulle righe del file, che hanno notevolmente ristretto il campo d'azione del modello. I documenti utilizzati per il progetto infatti contengono intere pagine "rumorose" per gli scopi dell'applicazione, che in fase di definizione delle finestre testuali sono state rimosse in quanto non contenenti alcuna etichetta prevista.
+
+Questo spiega anche la minore precisione del modello di Document AI, avendo un input molto più rumoroso, ovvero l'intero documento PDF. A dimostrazione di ciò, andando a osservare l'analisi degli errori commessi sull'interfaccia web di Google Cloud, è stato rilevato che la maggiorparte delle problematiche riscontrate sono stati dei casi di falsi positivi, ovvero dei rilevamenti addizionali rispetto a quelli reali, ma le entità corrette sono state predette con successo generalmente.
+
+\textbf{Le occorrenze dei dati presenti nei documenti di input}
+
+
+
+\section{Discussione e confronto tra le due soluzioni}
