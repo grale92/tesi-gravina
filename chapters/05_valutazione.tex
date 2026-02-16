@@ -10,7 +10,7 @@ Queste differenze metodologiche sono cruciali al fine di interpretare i risultat
 
 \section{Risultati sperimentali}
 
-Dai risultati della valutazione utilizzando le metriche a livello globale sui due modelli e mostrati in Figura~\ref{fig:overall_metrics}, emerge che a ottenere le migliori prestazioni è stato il modello custom realizzato con spaCy, ottenendo un F1-score di $0.96$ a fronte di un $0.85$ ottenuto dal modello configurato con Google Document AI.
+Dall'analisi delle metriche di valutazione a livello globale riportate in Figura~\ref{fig:overall_metrics}, emerge che a ottenere le migliori prestazioni è stato il modello custom realizzato con spaCy, ottenendo un F1-score di $0.96$, mentre la soluzione cloud-based si è attestata su un valore pari a $0.85$.
 
 \begin{figure}[H]
     \centering
@@ -19,7 +19,9 @@ Dai risultati della valutazione utilizzando le metriche a livello globale sui du
     \label{fig:overall_metrics}
 \end{figure}
 
-È possibile andare a vedere nel dettaglio i risultati suddivisi per alcune entità, mostrandone i relativi F1-score ottenuti nelle due soluzioni proposte.
+Il grafico evidenzia inoltre come la differenza tra i due modelli non sia limitata al solo F1-score, ma si distribuisca anche sulle componenti di precision e recall. Il modello spaCy mostra valori elevati e bilanciati su entrambe le metriche, mentre Document AI presenta una precision inferiore, a indicare una maggiore incidenza di falsi positivi.
+
+Passando ad un'analisi più granulare, la Figura~\ref{fig:compare_entity_f1} riporta il confronto degli F1-score relativi ad alcune entità specifiche. Questo livello di dettaglio permette di comprendere non solo quale sia il modello mediamente più performante, ma anche su quali tipologie di informazione emergano le principali criticità.
 
 \begin{figure}[H]
     \centering
@@ -28,18 +30,71 @@ Dai risultati della valutazione utilizzando le metriche a livello globale sui du
     \label{fig:compare_entity_f1}
 \end{figure}
 
-Si può osservare che le principali problematiche per il modello di Document AI sono state rilevate nel predirre le informazioni relative alle prove (\texttt{TEXT\_NAME} e \texttt{TEXT\_METHOD}), oltre che al codice dell'articolo o prodotto coinvolto (\texttt{ARTICLE\_NO}).
+Si osserva che le principali problematiche per il modello di Document AI si concentrano nell'estrazione delle informazioni relative alle prove (\texttt{TEXT\_NAME} e \texttt{TEXT\_METHOD}), oltre che al codice dell'articolo o prodotto coinvolto (\texttt{ARTICLE\_NO}).
 
-Riguardo entrambi i grafici, è possibile e doveroso fare delle considerazioni per comprendere al meglio i risultati, prima di passare a una successiva fase di valutazione a livello complessivo delle due soluzioni.
+Prima di trarre conclusioni definitive, è tuttavia necessario contestualizzare al meglio i risultati, tenendo conto delle differenze metodologiche delle due soluzioni.
 
-\textbf{Il ruolo della riduzione di rumore}
+\subsection{Il ruolo della riduzione di rumore}
 
-Oltre a quanto affermato nelle premesse di inizio capitolo, uno dei principali motivi per cui l'implementazione di spaCy ha ottenuto i risultati migliori è dovuta alle fasi di pre-processing e segmentazione. Sono state infatti effettuate numerose operazioni di manipolazione sulle righe del file, che hanno notevolmente ristretto il campo d'azione del modello. I documenti utilizzati per il progetto infatti contengono intere pagine "rumorose" per gli scopi dell'applicazione, che in fase di definizione delle finestre testuali sono state rimosse in quanto non contenenti alcuna etichetta prevista.
+Uno dei principali elementi per cui l'implementazione di spaCy ha ottenuto risultati migliori è rappresentato alle fasi di pre-processing e segmentazione implementate nella pipeline custom. Attraverso operazioni di pulizia e filtraggio sulle righe del file, sono state rimosse porzioni di documento non rilevanti ai fini applicativi, riducendo significativamente il rumore in ingresso al modello. I report utilizzati infatti, contengono intere sezioni che, pur essendo utili alla consultazione umana, non apportano alcun contributo all'estrazione delle entità di interesse. La definizione delle finestre contestuali ha permesso di isolare i frammenti annotabili, restringendo il campo operativo del modello.
 
-Questo spiega anche la minore precisione del modello di Document AI, avendo un input molto più rumoroso, ovvero l'intero documento PDF. A dimostrazione di ciò, andando a osservare l'analisi degli errori commessi sull'interfaccia web di Google Cloud, è stato rilevato che la maggiorparte delle problematiche riscontrate sono stati dei casi di falsi positivi, ovvero dei rilevamenti addizionali rispetto a quelli reali, ma le entità corrette sono state predette con successo generalmente.
+Al contrario, il modello di Document AI è stato applicato all'intero documento PDF, senza un pre-filtraggio. Questo ha comportato una maggiore esposizione a contenuti non rilevanti, con conseguente aumento dei falsi positivi. Le entità effettivamente corrette infatti venivano generalmente individuate, ma a queste si aggiungevano rilevamenti addizionali non presenti nell'etichettatura manuale.
 
-\textbf{Le occorrenze dei dati presenti nei documenti di input}
+\subsection{Le occorrenze di dati ripetuti}
 
+Un ulteriore aspetto che incide sulle performance riguarda la presenza di informazioni ripetute all'interno del documento. I report sono strutturati su più pagine e spesso reiterano le stesse entità in contesti differenti. Nel caso delle prove di laboratorio, i nomi dei test e i relativi metodi compaiono sia in tabelle analitiche dei risultati sperimentali, sia in tabelle riepilogative indicanti il successo o il fallimento delle prove.
 
+Anche in questo caso, la segmentazione operata nella soluzione custom ha contribuito a limitare il problema, concentrando l'attenzione del modello solo sulle sezioni più informative e coerenti con lo schema di etichettatura definito.
+
+\subsection{Il collegamento logico tra le entità}
+
+Un aspetto rilevante nella progettazione del modello Document AI è stata la definizione di una struttura gerarchica delle entità. In particolare, per le prove di laboratorio è stata introdotta un entità padre rappresentante il test, con due entità figlie (\texttt{test\_name} e {test\_method}). Questo implica che il modello non debba soltanto riconoscere correttamente le singole porzioni di testo, ma anche stabilire un'associazione logica coerente tra di esse.
+
+Tale vincolo aumenta la complessità del processo di estrazione e può influire nella precisione del modello. Tuttavia, questa impostazione offre un vantaggio applicativo significativo nella fase di post-processing che il modello spaCy non offre. Quest'ultimo infatti, non integra un meccanismo di associazione tra le entità, pertanto risulta più complicata la fase di post-processing e l'eventuale utilizzo applicativo dei dati ottenuti senza la definizione di un criterio associativo.
 
 \section{Discussione e confronto tra le due soluzioni}
+
+Alla luce dei risultati sperimentali presentati nella sezione precedente, è possibile effettuare un confronto strutturato tra i due approcci utilizzati. Il confronto non limita solo ai risultati ottenuti, ma prende in considerazione aspetti progettuali, architetturali ed anche economici che incidono significativamente sull'utilizzabilità della soluzione nel contesto applicativo di riferimento.
+
+\subsection{Confronto architetturale}
+
+L'approccio custom garantisce un controllo completo sull'intera pipeline descritta nei capitolo precedenti. Tale controllo consente una maggiore adattabilità a specifiche esigenze di dominio che come abbiamo visto porta a dei risultati tendenzialmente migliori in termini di qualità delle estrazioni.
+
+L'approccio su servizio gestito, invece, delega al provider cloud la complessità legata all'analisi del layout e al riconoscimento delle entità. Questo riduce sensibilmente l'effort iniziale e semplifica l'integrazione in un applicativo, ma introduce una dipendenza tecnologica e limita la possibilità di personalizzazione fine del modello.
+
+Un altro beneficio offerto dal servizio cloud che va a scapito delle prestazioni, è la possibilità di definire associazioni logiche tra le etichette, questo rappresenta un plus notevole in fase di post-processing e utilizzo all'interno dell'applicativo poiché consente di avere un output già ben strutturato e su cui è possibile fare matching più corretti.
+
+\subsection{Confronto operativo}
+
+Dal punto di vista operativo e ragionando nell'ottica di un'integrazione in un contesto industriale, emergono ulteriori punti da considerare:
+
+\begin{itemize}
+    \item \textbf{Scalabilità}: il servizio cloud offre scalabilità nativa e gestione automatica delle risorse, tuttavia l'integrazione applicativa è sempre un microservizio che richiede un'infrastruttura presente, che nel caso di utilizzo del modello custom deve supportare i processi di elaborazione richiesti dalla fase di addestramento e inferenza.
+    \item \textbf{Costi}: il modello custom lega i suoi costi allo sviluppo iniziale ed alla manutenzione del flusso, ma non prevede costi per richiesta; il servizio cloud prevede invece una modalità \textit{pay-per-use}, ovvero legata al numero di richieste effettuate. Di conseguenza è necessario valutare anche la mole dell'utenza del prodotto perché con quest'ultima modalità i costi possono crescere esponenzialmente.
+    \item \textbf{Sicurezza e controllo dei dati}: la soluzione custom mantiene l'intero ciclo di elaborazione all'interno dell'infrastruttura controllata, mentre l'approccio cloud prevede l'invio dei documenti e dei dati in esso contenuti a un sistema esterno; il tema legato ai dati necessita di un'analisi a parte che verrà approfondita nella sezione seguente.
+    \item \textbf{Manutenibilità}: nel caso custom, aggiornamenti e miglioramenti sono tenuti sono controllo dal team di sviluppo, mentre nel caso dell'approccio cloud l'evoluzione del prodotto è demandata al provider, con tutte le conseguenze del caso (necessità di adattamento ai cambiamenti, dipendenza tecnologica, ecc\dots).
+\end{itemize}
+
+\subsection{Confronto sulla gestione dei dati}
+
+Nel confrontare le due soluzioni, uno degli aspetti più rilevanti da tenere in considerazione -- e spesso sottovalutato -- è quello relativo alla protezione dei dati confidenziali ed ai vincoli relativi alla loro circolazione.
+
+In questo caso i documenti oggetto di elaborazione non contengono dati personali in senso stretto, ma informazioni di natura industriale che rappresentano un patrimonio informativo sensibile per l'azienda, in quanto legato alla qualità del prodotto, alla conformità normativa e alla competitività sul mercato.
+
+L'utilizzo di un servizio cloud per l'elaborazione dei documenti implica la trasmissione di questi dati verso infrastrutture esterne all'organizzazione. Dal punto di vista tecnico, questo introduce alcune considerazioni rilevanti:
+
+\begin{itemize}
+    \item perdita di controllo diretto sull'infrastruttura fisica che ospita i dati;
+    \item dipendenza dalle policy di sicurezza e di gestione del provider;
+    \item necessità di valutare dove vengono processati e archiviati i dati in base alle normative vigenti.
+\end{itemize}
+
+L'approccio custom, mantenendo l'intero flusso all'interno dell'infrastruttura consente di:
+
+\begin{itemize}
+    \item confinare i dati nel perimetro applicativo interno;
+    \item ridurre l'esposizione verso sistemi esterni;
+    \item garantire maggior controllo sulle modalità di conservazione e cancellazione dei documenti.
+\end{itemize}
+
+Pertanto nell'individuare una soluzione operativa è necessario nel caso ci si affidi ad un servizio cloud valutare questi aspetti tenendo conto del grado di controllo desiderato sulla circolazione di dati industriali, di eventuali vincoli di governance interna e accordi di riservatezza.

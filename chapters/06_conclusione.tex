@@ -1,2 +1,29 @@
 \chapter*{Conclusioni e sviluppi futuri}
 \addcontentsline{toc}{chapter}{Conclusioni e sviluppi futuri}
+
+Il lavoro svolto per il progetto di tesi ha affrontato un problema di Named Entity Recognition, in particolare legato all'estrazione automatica di informazioni strutturate da documenti tecnici in formato PDF nel settore fashion, caratterizzati da layout complessi ed eterogenei.
+
+L'obiettivo principale è stato quello di progettare e implementare una soluzione prototipale in grado di trasformare documenti non strutturati in dati utilizzabili da un'applicativo aziendale, riducendo il carico di lavoro manuale e migliorando l'efficienza del processo business esistente.
+
+A tal fine sono stati analizzati e implementati due approcci:
+
+\begin{itemize}
+    \item un approccio basato su servizi gestiti cloud per l'analisi documentale, in particolare il servizio di Google Cloud denominato Document AI;
+    \item un approccio custom end-to-end, a partire dall'estrazione del testo fino all'addestramento di un modello NER a transformer tramite la libreria spaCy
+\end{itemize}
+
+I risultati hanno evidenziato che a livello puramente prestazionale il modello custom abbia raggiunto risultati migliori in termini di accuratezza sulle entità di interesse, grazie alla forte specializzazione sul dominio e alla riduzione del rumore tramite le fasi di pre-processing.
+
+D'altro canto, l'approccio basato su Document AI ha mostrato una maggiore immediatezza di integrazione e minore complessità implementativa, oltre a funzionalità applicative superiori utili per le fasi successive all'estrazione dei dati.
+
+È stata infine realizzata una prima versione dell'interfaccia che utilizza i servizi realizzati e i dati ottenuti per le logiche di business necessarie alla gestione della validazione dei test di laboratorio da parte di enti esterni e fornitori.
+
+Nonostante i risultati ottenuti siano incoraggianti, il lavoro svolto rappresenta un primo passo verso un'integrazione completa in ambiente produttivo. Tra i principali sviluppi futuri è possibile individuare:
+
+\begin{itemize}
+    \item \textbf{Estensione del dataset di training}, includendo un numero maggiore di template e varianti documentali, al fine di migliorare la capacità di generalizzazione del modello.
+    \item \textbf{Miglioramento del servizio web}, con gestione avanzata degli errori, monitoraggio delle performance e versionamento del modello utilizzato. Da definire anche le politiche legate all'autenticazione e ai limiti da introdurre all'utilizzo delle funzionalità NER, al fine di limitare i costi o il sovraccarico dell'infrastruttura a seconda della soluzione utilizzata.
+    \item \textbf{Miglioramento dell'integrazione con i dati aziendali}, utilizzando tecniche di recupero semantico basate su embedding vettoriali, per aumentare la robustezza della fase di matching e ridurre il numero di interventi manuali per la validazione dei risultati.
+\end{itemize}
+
+In sintesi, il lavoro svolto pone le basi per un sistema in evoluzione, dove l'estrazione automatica delle informazioni è solo il primo livello di automazione, mentre tutte le integrazioni future potranno contribuire a rendere il processo più intelligente, scalabile e adattabile ai cambiamenti del contesto applicativo.
