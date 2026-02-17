@@ -140,13 +140,25 @@ L'output ottenuto dalla fase di etichettatura consiste in un file contenente l'a
 
 \subsection{Addestramento}
 
-La fase di addestramento (\textit{training}) del modello è stata implementata come un processo supervisionato a partire dai dati annotati manualmente tramite uno strumento di labeling. In particolare, le annotazioni vengono esportate e successivamente convertite in un formato nativo compatibile con la libreria scelta, necessario per l’avvio della fase di training.
+La fase di addestramento (\textit{training}) è un processo supervisionato, nel quale il modello viene ottimizzato a partire dai dati annotati manualmente tramite uno strumento di labeling. In particolare, le annotazioni vengono esportate e successivamente convertite in un formato nativo compatibile con la libreria scelta, necessario per l’avvio della fase di training.
 
 Durante questa fase, il testo viene tokenizzato e le annotazioni vengono riallineate alla tokenizzazione interna del modello, adottando una strategia difensiva per gestire eventuali disallineamenti tra gli offset testuali e i confini dei token. Le entità che non risultano correttamente allineabili vengono scartate, evitando così errori durante l’addestramento e garantendo la stabilità del processo.
 
+Il processo di training si basa sull'obiettivo di minimizzare una funzione di perdita che misura la differenza tra le etichette predette dal modello e quelle annotate manualmente. Il processo avviene in più itierazioni, in ciascuna delle quali il modello produce una predizione per ogni token della sequenza e aggiorna i propri parametri interni in modo da ridurre progressivamente l'errore complessivo. Questo meccanismo consente al sistema di apprendere in modo sempre più conforme al dominio applicativo specifico.
+
 Al fine di consentire una valutazione oggettiva delle prestazioni del modello, il dataset annotato viene suddiviso automaticamente in un insieme di addestramento e un insieme di validazione, secondo una proporzione configurabile. Tale suddivisione viene effettuata in modo riproducibile, utilizzando un \textit{seed} casuale, così da rendere confrontabili le diverse iterazioni di training effettuate nel corso della sperimentazione.
 
-[TODO spiegare addestramento]
+Un ulteriore aspetto rilevante nella progettazione della fase di addestramento consiste nella configurazione degli iperparametri del modello. Questi vengono definiti prima dell'avvio del processo e influenzano in modo significativo il comportamento del modello.
+
+Tra gli iperparametri principali rientrano:
+
+\begin{itemize}
+    \item il \textbf{numero di epoche di addestramento}, ovvero i cicli di addestramento attraverso l'intero set di dati;
+    \item la \textbf{dimensione del batch}, ovvero il numero di esempi utilizzati per ciascun aggiornamento dei parametri;
+    \item il \textbf{learning rate}, ovvero l'ampiezza degli aggiornamenti applicati ai parametri del modello.
+\end{itemize}
+
+La scelta di tali iperparametri incide direttamente sull'equilibrio tra capacità di apprendimento e generalizzazione. Un batch di dimensione ridotta introduce maggiore variabilità negli aggiornamenti, mentre batch più grandi rendono l'ottimizzazione stabile ma richiedono più risorse computazionali. Un learning rate troppo elevato può causare instabilità e oscillazioni nella funzione di perdita, al contrario, un valore troppo basso può rallentare eccessivamente il miglioramento delle predizioni del modello.
 
 \subsection{Utilizzo del modello NER}
 

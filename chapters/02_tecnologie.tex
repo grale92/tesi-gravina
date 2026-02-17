@@ -14,7 +14,11 @@ Diversamente, nel caso di documenti scansionati o acquisiti da fotografie, il co
 
 I documenti PDF nativi (\emph{digitally-born PDF}) non memorizzano il contenuto testuale secondo una struttura logica basata su parole, righe o paragrafi, bensì come una sequenza di istruzioni grafiche descritte all’interno dei cosiddetti \emph{content streams}. Come definito nella specifica ISO~32000, il testo in un PDF è rappresentato tramite operatori che specificano il font da utilizzare, la dimensione del carattere, le trasformazioni geometriche e la posizione assoluta sulla pagina, tseguiti da stringhe di codici che identificano i simboli da disegnare \cite{ISO32000-1}. Tali stringhe non corrispondono necessariamente a caratteri Unicode, ma devono essere interpretate in funzione dell’encoding del font e, ove presente, della relativa \emph{ToUnicode CMap}. 
 
-[immagine esempio di pdf stream]
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/pdf_stream.png}
+  \caption{Esempio di uno stream PDF}
+\end{figure}
 
 Di conseguenza, l’estrazione del testo da un PDF nativo è costituito da un processo di parsing e interpretazione semantica delle istruzioni di rendering. L'obiettivo di tale processo è ricostruire una rappresentazione testuale coerente a partire da informazioni puramente grafiche, combinando i dati relativi ai simboli con le informazioni geometriche e di formattazione associata a ciascun elemento.
 

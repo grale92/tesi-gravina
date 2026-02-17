@@ -47,14 +47,12 @@ Il flusso di elaborazione può essere schematizzato come segue:
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/spacy_pipeline.png}
-    \caption{Pipeline di elaborazione di spaCy} asd
+    \caption{Pipeline di elaborazione di spaCy}
 \end{figure}
 
-La componente NER di spaCy è implementata come un modello di \textit{sequence labeling}, il cui obiettivo è assegnare a ciascun token un'etichetta che rappresenta il ruolo semantico del token stesso all'interno di un'entità. Il modello è basato su una rete neurale che combina \textit{embedding} dei token, rappresentazioni del contesto e un classificatore finale che predice le etichette per le varie entità.
+La componente NER di spaCy è implementata come un modello di \textit{sequence labeling}, il cui obiettivo è assegnare a ciascun token un'etichetta che rappresenta il ruolo semantico del token stesso all'interno di un'entità. Il modello, nelle versioni più recenti della libreria, è costruito tramite un framework interno chiamato \textit{Thinc}, che permette di definire reti neurali modulari e configurabili tramite un apposito file di configurazione.
 
-A partire da questo modello di base, spaCy consente l'addestramento di modelli personalizzati mediante apprendimento supervisionato. Il processo di training richiede un dataset annotato manualmente, in cui le entità da riconoscere sono etichettate nel testo e permette tramite apposite configurazioni di definire i parametri di ottimizzazione e le modalità di valutazione. 
-
-[TODO] espandere?
+A partire da un modello di base, spaCy consente l'addestramento di modelli personalizzati mediante apprendimento supervisionato. Il processo di training richiede un dataset annotato manualmente, in cui le entità da riconoscere sono etichettate nel testo e tramite il file di configurazione è possibile definire l'architettura del modello, i parametri di ottimizzazione (\textit{learning rate}, \textit{batch size}, numero di iterazioni) e le modalità di valutazione. 
 
 \subsection{Doccano}
 
@@ -224,48 +222,48 @@ Il file JSONL, pur essendo semplice e leggibile, non è direttamente utilizzabil
 Nel dettaglio il seguente blocco di codice estratto dallo script fornisce la logica con cui viene inizializzato il modello.
 
 \begin{lstlisting}[language=Python]
-    random.seed(args.seed)
+random.seed(args.seed)
 
-	nlp = spacy.blank(args.lang)
+nlp = spacy.blank(args.lang)
 
-	examples = []
-	with open(args.inp, "r", encoding="utf-8") as f:
-		for line in f:
-			line = line.strip()
-			if not line:
-				continue
-			obj = json.loads(line)
+examples = []
+with open(args.inp, "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        obj = json.loads(line)
 
-			text = obj.get("text", "")
-			labels = obj.get("label", [])  # Doccano field
+        text = obj.get("text", "")
+        labels = obj.get("label", [])  # Doccano field
 
-			doc = nlp.make_doc(text)
-			ents = []
-			for start, end, lab in labels:
-				start = int(start); end = int(end)
-				span = doc.char_span(start, end, label=lab, alignment_mode="contract")
-				if span is None:
-					continue
-				ents.append(span)
+        doc = nlp.make_doc(text)
+        ents = []
+        for start, end, lab in labels:
+            start = int(start); end = int(end)
+            span = doc.char_span(start, end, label=lab, alignment_mode="contract")
+            if span is None:
+                continue
+            ents.append(span)
 
-			doc.ents = ents
-			examples.append(doc)
+        doc.ents = ents
+        examples.append(doc)
 
-	if not examples:
-		raise SystemExit("No examples found. Input file is empty")
+if not examples:
+    raise SystemExit("No examples found. Input file is empty")
 
-	random.shuffle(examples)
-	split = int(len(examples) * (1.0 - args.dev_ratio))
-	train_docs = examples[:split]
-	dev_docs = examples[split:]
+random.shuffle(examples)
+split = int(len(examples) * (1.0 - args.dev_ratio))
+train_docs = examples[:split]
+dev_docs = examples[split:]
 
-	train_bin = DocBin(store_user_data=True)
-	dev_bin = DocBin(store_user_data=True)
+train_bin = DocBin(store_user_data=True)
+dev_bin = DocBin(store_user_data=True)
 
-	for d in train_docs:
-		train_bin.add(d)
-	for d in dev_docs:
-		dev_bin.add(d)
+for d in train_docs:
+    train_bin.add(d)
+for d in dev_docs:
+    dev_bin.add(d)
 \end{lstlisting}
 
 In primo luogo l'inizializzazione del modello avviene con la funzione \\ \texttt{spacy.blank()}, a cui viene fornita in input solo la lingua passata come argomento che indirizza in modo corretto la fase di tokenizzazione.
