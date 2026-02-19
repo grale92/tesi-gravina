@@ -469,3 +469,16 @@ La nuova interfaccia realizzata è più semplice e immediata, e a livello operat
 
 [inserire immagini]
 
+\subsection{Recupero dei dati aziendali e strategie di matching "debole"}
+
+Le entità estratte dal modello NER non coincidono necessariamente in modo perfetto con la rappresentazione presente nel database aziendale, nonostante una fase di normalizzazione già presente in fase di elaborazione.
+
+Di conseguenza, per questa prima fase di integrazione è stata utilizzata una strategia che non si basi esclusivamente su confronti esatti. L'associazione è stata implementata come un matching rilassato, per tollerare differenze sintattiche e piccole variazioni testuali. Le tre tecniche utilizzate sono principalmente:
+
+\begin{itemize}
+    \item \textbf{Normalizzazione preventiva delle stringhe}. Le entità estratte subiscono un'ulteriore fase di normalizzazione, che consiste in operazioni quali la conversione in minuscolo, rimozione di spazi superflui, uniformazione di simboli e separatori, eliminazione di caratteri non significativi.
+    \item \textbf{Matching parziale su campi strutturati}. Per campi altamente discriminanti quali il codice articolo, l'anno stagione o numeri di standard di certificazione, viene effettuato un confronto parziale, privilegiando la presenza di pattern all'interno delle stringhe.
+    \item \textbf{Fuzzy matching su campi descrittivi}. Per le entità di tipo descrittivo, come il nome del test o il metodo normativo, è stato adottato un confronto basato su misure di similarità lessicale. In particolare viene calcolato un punteggio di similarità utilizzando metriche basate su distanza edit e similarità dei token.
+\end{itemize}
+
+Queste tecniche, tuttavia, all'aumentare delle varianti documentali, possono comunque portare a falsi negativi, richiedendo maggior intervento manuale sulla fase di validazione. Per superare tali limitazioni, un'evoluzione naturale prevederebbe l'introduzione di tecniche basate su rappresentazioni semantiche, come la trasformazione delle descrizioni testuali in vettori numerici (\textit{embeddings}) e il confronto nello spazio vettoriale tramite misure di similarità.
