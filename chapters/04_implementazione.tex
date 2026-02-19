@@ -455,6 +455,17 @@ In questo caso la fase di normalizzazione prevede una rielaborazione dell'output
 
 \section{Integrazione con l’applicazione esistente}
 
-L'integrazione dei servizi sviluppati con FastAPI è fatta sfruttando la rete \textit{bridge} condivisa di Docker, definita nel \textit{docker-compose}, ovvero il file di configurazione che regola tutti i container e le loro configurazioni. Il container dedicato alle funzionalità NER è stato aggiunto alla rete comprendente le altre componenti dell'applicazione tra cui il frontend, implementato come una webapp in Angular.
+L'integrazione dei servizi sviluppati con FastAPI all'interno dell'applicativo esistente è fatta sfruttando la rete \textit{bridge} condivisa di Docker, definita nel \textit{docker-compose}, ovvero il file di configurazione che regola tutti i container e le loro configurazioni. Il container dedicato alle funzionalità NER è stato aggiunto alla rete comprendente le altre componenti dell'applicazione tra cui il frontend, implementato come una webapp in Angular.
 
-[TODO]
+Dal punto di vista dell'interfaccia l'obiettivo è affiancare le pagine già esistenti, che consentono tramite form specifici per articoli e prodotti finiti di filtrare i dati delle prove di laboratorio e una volta ottenuti i dati desiderati associargli le informazioni del documento di report PDF.
+
+La nuova interfaccia realizzata è più semplice e immediata, e a livello operativo si occupa di:
+
+\begin{itemize}
+    \item caricare un report PDF;
+    \item tramite le entità rilevate dal modello NER avviare la ricerca dei record sul database;
+    \item mostrare le corrispondenze trovate e permettere all'utente la verifica e la selezione dei test prima della conferma.
+\end{itemize}
+
+[inserire immagini]
+

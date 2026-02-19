@@ -48,7 +48,7 @@ Anche in questo caso, la segmentazione operata nella soluzione custom ha contrib
 
 \subsection{Il collegamento logico tra le entità}
 
-Un aspetto rilevante nella progettazione del modello Document AI è stata la definizione di una struttura gerarchica delle entità. In particolare, per le prove di laboratorio è stata introdotta un entità padre rappresentante il test, con due entità figlie (\texttt{test\_name} e {test\_method}). Questo implica che il modello non debba soltanto riconoscere correttamente le singole porzioni di testo, ma anche stabilire un'associazione logica coerente tra di esse.
+Un aspetto rilevante nella progettazione del modello Document AI è stata la definizione di una struttura gerarchica delle entità. In particolare, per le prove di laboratorio è stata introdotta un entità padre rappresentante il test, con due entità figlie (\texttt{test\_name} e \texttt{test\_method}). Questo implica che il modello non debba soltanto riconoscere correttamente le singole porzioni di testo, ma anche stabilire un'associazione logica coerente tra di esse.
 
 Tale vincolo aumenta la complessità del processo di estrazione e può influire nella precisione del modello. Tuttavia, questa impostazione offre un vantaggio applicativo significativo nella fase di post-processing che il modello spaCy non offre. Quest'ultimo infatti, non integra un meccanismo di associazione tra le entità, pertanto risulta più complicata la fase di post-processing e l'eventuale utilizzo applicativo dei dati ottenuti senza la definizione di un criterio associativo.
 
