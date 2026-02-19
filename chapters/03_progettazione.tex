@@ -162,7 +162,23 @@ La scelta di tali iperparametri incide direttamente sull'equilibrio tra capacit�
 
 \subsection{Utilizzo del modello NER}
 
-[TODO]
+Una volta completata la fase di addestramento, il modello NER viene integrato all'interno dell'architettura applicativa come componente dedicato all'estrazione automatica delle entità dai documenti PDF caricati dall'utente.
+
+Dal punto di vista progettuale, il modello viene incapsulato all'interno di un servizio applicativo indipendente, che viene richiamato dal frontend. Tale scelta è stata fatta almeno in questa fase sperimentale per separare la logica di inferenza dal resto dell'applicazione, garantendo modularità e la possibilità in futuro di sostituire il modello senza impattare sul resto del sistema.
+
+A livello operativo il flusso previsto è il seguente:
+
+\begin{enumerate}
+    \item L'utente carica un documento PDF tramite l'interfaccia web.
+    \item Il documento viene sottoposto a una fase preliminare simile a quella subita dal dataset di training, che prevede l'estrazione del testo e la segmentazione in finestre testuali.
+    \item L'oggetto risultante viene fornito in input al modello NER.
+    \item Il modello produce un insieme di entità riconosciute, ciascuna associata a un'etichetta.
+    \item Le entità estratte vengono normalizzate e trasformate in una struttura dati coerente con lo schema previsto dall'applicazione.
+\end{enumerate}
+
+Un aspetto centrale riguarda la standardizzazione dell'output, poiché le entità riconosciute dal modello costituiscono l'input per una fase di matching verso i dati aziendali. In questa fase le informazioni estratte vengono confrontate con i record presenti nel sistema informativo, per individuare le prove corrispondenti al documento analizzato.
+
+Tale corrispondenza non può basarsi su uguaglianze esatte, poiché i documenti provenienti da enti diversi possono presentare variazioni terminologiche o differenze di formattazione. Per questo motivo è stato previsto, almeno per questa fase sperimentale, l'utilizzo di confronti parziali, tecniche di fuzzy matching e normalizzazione preventiva delle stringhe.
 
 \section{Approccio basato su servizi gestiti}
 
@@ -177,7 +193,7 @@ In alternativa alla soluzione custom progettata e descritta nelle sezioni preced
 
 Dal punto di vista progettuale, l'implementazione interna è stata realizzata in maniera tale da semplificare il più possibile per ottenere rapidamente un prototipo funzionante, gestendo esternamente le fasi di feature engineering, di etichettatura e di addestramento. 
 
-L’integrazione con un servizio cloud-based viene progettata come un componente indipendente all’interno dell’architettura applicativa, accessibile tramite interfacce REST e sostituibile senza impatti sulle altre componenti del sistema. In questo modo, il servizio di estrazione delle informazioni può essere visto come una "black box" che riceve in input un documento PDF e restituisce un output strutturato secondo uno schema predefinito, coerente con le esigenze dell’applicazione. Oltre a questo, il servizio si occuperà della fase finale di pulizia e normalizzazione dei dati restituiti dal servizio esterno, in modo da standardizzare l'output rendendolo coerente con quello definito tramite implementazione custom.
+L’integrazione con un servizio cloud-based, così come per la soluzione custom vista in precedenza, viene progettata come un componente indipendente all’interno dell’architettura applicativa, accessibile tramite interfacce REST e sostituibile senza impatti sulle altre componenti del sistema. In questo modo, il servizio di estrazione delle informazioni può essere visto come una "black box" che riceve in input un documento PDF e restituisce un output strutturato secondo uno schema predefinito, coerente con le esigenze dell’applicazione. Oltre a questo, anche questo servizio si occuperà della fase finale di pulizia e normalizzazione dei dati restituiti dal servizio esterno, in modo da standardizzare l'output rendendolo coerente con quello definito tramite implementazione custom.
 
 Questo approccio presenta tuttavia alcune implicazioni progettuali, legate principalmente alla dipendenza da un servizio esterno, alla limitata possibilità di personalizzazione del modello sottostante e alla questione della sicurezza dei dati nel cloud nell'ambito della gestione dei documenti di input. Lo scopo di tale implementazione è effettuare una valutazione analitica e prestazionale al fine di individuare la soluzione più valida da utilizzare in un ambiente di produzione.
 
