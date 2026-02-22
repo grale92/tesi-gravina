@@ -4,7 +4,7 @@ In questo capitolo viene approfondita l'analisi del problema delineato nel Capit
 
 I documenti oggetto di studio sono forniti da enti esterni e risultano progettati principalmente per la consultazione umana. Essi non seguono standard strutturali che favoriscono l'elaborazione automatica, anche a causa della presenza di molteplici soggetti a produrli, ciascuno dei quali adotta layout e impaginazioni differenti. La complessità della struttura è accentuata dall'utilizzo di tabelle, colonne multiple e testi multilingua, elementi che impediscono l'estrazione sistematica delle informazioni.
 
-Il problema affrontato nel progetto consiste nell'individuare una strategia efficace per trasformare documenti eterogenei e rumorosi in una rappresentazione strutturata, attraverso l'identificazione automatica di entità rilevanti. A tal fine sono stati presi in considerazione due approcci differenti: una soluzione cloud-based basata su un prodotto già disponibile sul mercato e una soluzione custom che implementa l'intero processo, dalla fase di estrazione del contenuto testuale del file fino all'addestramento e all'utilizzo del modello dedicato per l'estrazione automatica delle entità.
+Il problema affrontato nel progetto consiste nell'individuare una strategia efficace per trasformare documenti eterogenei e rumorosi in una rappresentazione strutturata, attraverso l'identificazione automatica di entità rilevanti. A tal fine sono stati presi in considerazione due approcci differenti: una soluzione cloud-based basata su un prodotto già disponibile sul mercato e una soluzione custom che implementa l'intero processo, dalla fase di estrazione del contenuto testuale del file fino all'addestramento e all'utilizzo del modello dedicato per l'estrazione automatica delle entità. 
 
 \section{Caso d'uso}
 
@@ -19,11 +19,16 @@ La definizione dei casi d'uso è stata condotta a partire dalle esigenze emerse 
     \item \textbf{Database}: il contenitore dei dati relativi ai modelli (prodotti finiti), agli articoli e alle informazioni sui test necessari per il processo produttivo.
 \end{itemize}
 
-[diagramma flusso]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/flusso_completo.png}
+    \caption{Rappresentazione del flusso applicativo}
+    \label{fig:flusso_completo}
+\end{figure}
 
 Successivamente, è stato definito nel dettaglio il flusso applicativo desiderato, che ha lo scopo di semplificare il processo di aggiornamento dei test effettuati su un determinato articolo o modello. Di seguito vengono definite le fasi che caratterizzano tale flusso.
 
-\textbf{Caricamento del report}.   L'utente dell'ente di certificazione accede a una pagina dedicata all'interno dell'applicativo, affiancata a quelle già esistenti e distinta da esse per la semplicità dell'interfaccia. All'apertura della pagina infatti, l'utente visualizza solo vedere un modulo di caricamento che consente di effettuare l'upload del documento PDF, o tramite trascinamento o tramite ricerca nelle cartelle del dispositivo utilizzato. Il documento racchiude i risultati dei test di laboratorio eseguiti su uno specifico articolo o modello.
+\textbf{Caricamento del report}.   L'utente dell'ente di certificazione accede a una pagina dedicata all'interno dell'applicativo, affiancata a quelle già esistenti e distinta da esse per la semplicità dell'interfaccia. All'apertura della pagina infatti, l'utente visualizza esclusivamente un modulo di caricamento che consente di effettuare l'upload del documento PDF, o tramite trascinamento o tramite ricerca nelle cartelle del dispositivo utilizzato. Il documento racchiude i risultati dei test di laboratorio eseguiti su uno specifico articolo o modello.
 
 \textbf{Elaborazione del report}.    Il file viene inoltrato a un servizio di elaborazione che si occupa di caricare il modello NER, che in questo caso potrà corrispondere o al modello cloud-based o a quello implementato custom, e lo utilizzerà per analizzare il file e restituire le entità significative per cui il modello è addestrato. Il formato per poter essere utilizzabile dall'applicazione dev'essere standardizzato per entrambe le soluzioni realizzate.
 
@@ -34,7 +39,7 @@ Successivamente, è stato definito nel dettaglio il flusso applicativo desiderat
 
 \section{Requisiti del sistema}
 
-Alla luce delle criticità individuate, il sistema sviluppato deve soddisfarre una serie di requisiti comuni a entrambe le soluzioni analizzate, al fine di consentire un confronto significativo. La soluzione prodotta infatti non sarà direttamente integrata nell'applicativo esistente che è già operativo in produzione, ma fungerà da prototipo che dovrà in seguito ad una valutazione accurata essere poi rifinito e adeguato per poter costituire una nuova funzionalità \textit{production-ready}.
+Alla luce delle criticità individuate, il sistema sviluppato deve soddisfare una serie di requisiti comuni a entrambe le soluzioni analizzate, al fine di consentire un confronto significativo. La soluzione prodotta infatti non sarà direttamente integrata nell'applicativo esistente che è già operativo in produzione, ma fungerà da prototipo che dovrà in seguito ad una valutazione accurata essere poi rifinito e adeguato per poter costituire una nuova funzionalità \textit{production-ready}.
 
 Per quanto riguarda i requisiti funzionali, possono essere schematizzati come di seguito.
 
@@ -59,6 +64,8 @@ Dal punto di vista non funzionale invece, il sistema deve rispecchiare alcuni as
 \textbf{Isolamento}. Il sistema deve essere containerizzato per favorire l’integrazione in un’architettura a microservizi, garantendo l’isolamento delle singole componenti applicative e la comunicazione tramite interfacce ben definite.
 
 \textbf{Riproducibilità}. Particolare attenzione deve essere posta alla riproducibilità del processo di training del modello NER, in modo da consentire iterazioni sperimentali controllate e permettere una valutazione oggettiva delle diverse soluzioni e configurazioni adottate nel corso del progetto.
+
+\textbf{Scalabilità}. Il sistema dev'essere progettato in modo da supportare un numero crescente di documenti senza degradare significativamente le prestazioni e mantenendo dei tempi di risposta che siano compatibili con quelli di un utilizzo interattivo dell'interfaccia web, in modo da non compromettere l'esperienza utente.
 
 Come già anticipato, considerata la natura sperimentale del progetto e la necessità di valutare soluzioni applicabili in un contesto reale, si è scelto di analizzare e confrontare due differenti approcci progettuali all’estrazione delle informazioni dai documenti differenti, nelle sezioni successive verranno esposte le due differenti architetture a livello logico.
 
@@ -144,7 +151,7 @@ La fase di addestramento (\textit{training}) è un processo supervisionato, nel 
 
 Durante questa fase, il testo viene tokenizzato e le annotazioni vengono riallineate alla tokenizzazione interna del modello, adottando una strategia difensiva per gestire eventuali disallineamenti tra gli offset testuali e i confini dei token. Le entità che non risultano correttamente allineabili vengono scartate, evitando così errori durante l’addestramento e garantendo la stabilità del processo.
 
-Il processo di training si basa sull'obiettivo di minimizzare una funzione di perdita che misura la differenza tra le etichette predette dal modello e quelle annotate manualmente. Il processo avviene in più itierazioni, in ciascuna delle quali il modello produce una predizione per ogni token della sequenza e aggiorna i propri parametri interni in modo da ridurre progressivamente l'errore complessivo. Questo meccanismo consente al sistema di apprendere in modo sempre più conforme al dominio applicativo specifico.
+Il processo di training si basa sull'obiettivo di minimizzare una funzione di perdita che misura la differenza tra le etichette predette dal modello e quelle annotate manualmente. Il processo avviene in più iterazioni, in ciascuna delle quali il modello produce una predizione per ogni token della sequenza e aggiorna i propri parametri interni in modo da ridurre progressivamente l'errore complessivo. Questo meccanismo consente al sistema di apprendere in modo sempre più conforme al dominio applicativo specifico.
 
 Al fine di consentire una valutazione oggettiva delle prestazioni del modello, il dataset annotato viene suddiviso automaticamente in un insieme di addestramento e un insieme di validazione, secondo una proporzione configurabile. Tale suddivisione viene effettuata in modo riproducibile, utilizzando un \textit{seed} casuale, così da rendere confrontabili le diverse iterazioni di training effettuate nel corso della sperimentazione.
 
@@ -159,6 +166,8 @@ Tra gli iperparametri principali rientrano:
 \end{itemize}
 
 La scelta di tali iperparametri incide direttamente sull'equilibrio tra capacità di apprendimento e generalizzazione. Un batch di dimensione ridotta introduce maggiore variabilità negli aggiornamenti, mentre batch più grandi rendono l'ottimizzazione stabile ma richiedono più risorse computazionali. Un learning rate troppo elevato può causare instabilità e oscillazioni nella funzione di perdita, al contrario, un valore troppo basso può rallentare eccessivamente il miglioramento delle predizioni del modello.
+
+Durante l'addestramento è fondamentale monitorare l'evoluzione delle metriche sul dataseset di validazione, al fine di prevenire fenomeni di \textit{overfitting}. Per fare ciò vengono utilizzate strategie di \textit{early stopping}, interrompendo l'addestramento se le prestazioni sui dati di valutazione non mostrano ulteriori miglioramenti. Infine, il modello con le migliori prestazioni viene salvato come checkpoint finale per l'utilizzo in fase di inferenza.
 
 \subsection{Utilizzo del modello NER}
 
@@ -200,7 +209,7 @@ Questo approccio presenta tuttavia alcune implicazioni progettuali, legate princ
 \section{Strategie di associazione documento-entità}
 \label{sec:associazione-documento-entita}
 
-Per evidenziare al meglio le peculiarità del processo di estrazione automatica delle informazioni, è necessario fare una panoramica sulla selezione delle entità effettuata. I documenti di input, contengono una grande quantità di informazioni eterogenee e di rumore, tra cui dati anagrafici del laboratorio, riferimenti normativi, descrizioni testuali e fotografiche del campione, dati amministrativi e risultati delle prove. 
+Per evidenziare al meglio le peculiarità del processo di estrazione automatica delle informazioni, è necessario fare una panoramica sulla selezione delle entità effettuata. I documenti di input contengono una grande quantità di informazioni eterogenee e di rumore, tra cui dati anagrafici del laboratorio, riferimenti normativi, descrizioni testuali e fotografiche del campione, dati amministrativi e risultati delle prove. 
 
 \begin{figure}[H]
     \centering

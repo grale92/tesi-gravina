@@ -8,7 +8,7 @@ In particolare, vengono descritte le principali componenti implementative della 
 
 \subsection{PyMuPDF}
 
-Per l'estrazione del contenuto testuale dei documenti PDF nativi è stata utilizzata la libreria \textbf{PyMuPdf} \cite{pymupdf-docs} (anche nota come \textit{fitz}), una trasposizione in \textit{Python} del motore di parsing e rendering open source \textit{MuPDF}, progettato per l'elaborazione efficiente di documenti in formato PDF, XPS ed EPUB.
+Per l'estrazione del contenuto testuale dei documenti PDF nativi è stata utilizzata la libreria \textbf{PyMuPDF} \cite{pymupdf-docs} (anche nota come \textit{fitz}), una trasposizione in \textit{Python} del motore di parsing e rendering open source \textit{MuPDF}, progettato per l'elaborazione efficiente di documenti in formato PDF, XPS ed EPUB.
 
 PyMuPDF consente di accedere direttamente alla rappresentazione interna del documento, permettendo di accedere alle sue componenti fondamentali, secondo il livello di granularità richiesto dall'applicativo. In particolare la libreria offre i seguenti livelli gerarchici di rappresentazione:
 
@@ -27,7 +27,7 @@ PyMuPDF consente di accedere direttamente alla rappresentazione interna del docu
 
 Oltre alla rappresentazione testuale, PyMuPDF consente di accedere a informazioni aggiuntive relative al layout e metadati del documento, come coordinate spaziali dei blocchi testuali, font e dimensione dei caratteri. Queste informazioni possono essere utilizzate per migliorare l'interpretazione del contenuto, ad esempio distinguere intestazioni, tabelle o sezioni ricorrenti all'interno del testo.
 
-La libreria si denota per elevata velocità di elaborazione grazie al motore su cui è basata, tuttavia non fornisce nativamente strumenti per l'interpretazione semantica delle strutture testuali estratte. Di conseguenza, PyMuPDF viene utilizzata come componente di basso livello all'interno di una pipeline più strutturata e costituisce l'input per successive fasi di analisi semantica e contestuale.
+La libreria si distingue per l'elevata velocità di elaborazione grazie al motore su cui è basata, tuttavia non fornisce nativamente strumenti per l'interpretazione semantica delle strutture testuali estratte. Di conseguenza, PyMuPDF viene utilizzata come componente di basso livello all'interno di una pipeline più strutturata e costituisce l'input per successive fasi di analisi semantica e contestuale.
 
 \subsection{spaCy}
 
@@ -138,14 +138,14 @@ Di seguito un esempio di riga ottenuta come output dalle operazioni appena elenc
     ],
     "cols": [
         "", "Colorfastness to Alkaline perspiration", 
-        "Grade", "GB/T 3922-2013", "Color staining > 3, 
+        "Grade", "GB/T 3922-2013", "Color staining > 3", 
         "Polyester 4-5", "Pass"
     ],
     "text": "Colorfastness to Alkaline perspiration | Grade | GB/T 3922-2013 | Color staining > 3 | Polyester 4-5 | Pass"
 },
 \end{lstlisting}
 
-La fase successiva, ovvero la segmentazione in finestre testuali, viene gestita dallo script \texttt{build\_spacy\_windows.py}. La necessità di creare finestre nasce dalla necessità in primo luogo di non dover fornire al modello l'intero testo estratto dal PDF, per evitare un input rumoroso e efficientarne le prestazioni; da un altro punto di vista, le singole righe invece spesso non contengono sufficiente contesto locale per interpretare correttamente le entità.
+La fase successiva, ovvero la segmentazione in finestre testuali, viene gestita dallo script \texttt{build\_spacy\_windows.py}. La creazione di finestre testuali nasce dalla necessità in primo luogo di non dover fornire al modello l'intero testo estratto dal PDF, per evitare un input rumoroso e efficientarne le prestazioni; da un altro punto di vista, le singole righe invece spesso non contengono sufficiente contesto locale per interpretare correttamente le entità.
 
 Dal punto di vista implementativo, lo script ordina le linee per pagina e posizione verticale e le unisce in finestre testuali usando principalmente due parametri: la dimensione della finestra (\texttt{window\_size}) e il passo di avanzamento (\texttt{stride}). Il tuning di questi due parametri permettono di bilanciare copertura del documento e ridondanza: \texttt{stride} ridotto aumenta la probabilità che che un'entità compaia integralmente almeno in una finestra, mentre valori più elevati riducono il numero totale di esempi da annotare. Per quanto riguarda la \texttt{window\_size} i migliori risultati sia a livello di efficienza che di precisione del modello sono stati riscontrati con finestre da 7 righe. Una volta create le finestre vengono applicate ulteriori funzioni di pulizia usando \textit{regex} per individuare finestre con testo molto rumoroso o ritenuto non rilevante, in modo da evitare di avere troppe finestre senza entità rilevanti al loro interno.
 
@@ -153,18 +153,18 @@ L'ultima fase della preparazione del dataset è gestita dallo script \\\texttt{w
 Di seguito è possibile vedere un esempio di un frammento del file relativo a una finestra testuale:
 
 \begin{lstlisting}
-    {
-        "text": "BLOCCO TESTUALE DELLA FINESTRA", 
-        "label": [], 
-        "meta": {
-            "source_pdf": "/data/pdf/15-097-66240980285.pdf", 
-            "page": 1, 
-            "window": 7, 
-            "stride": 2, 
-            "start_line": 2, 
-            "end_line": 8
-        }
+{
+    "text": "BLOCCO TESTUALE DELLA FINESTRA", 
+    "label": [], 
+    "meta": {
+        "source_pdf": "/data/pdf/15-097-66240980285.pdf", 
+        "page": 1, 
+        "window": 7, 
+        "stride": 2, 
+        "start_line": 2, 
+        "end_line": 8
     }
+}
 \end{lstlisting}
 
 il campo \texttt{label} verrà riempito dalla fase di etichettatura contenendo le entità trovate all'interno della finestra testuale, mentre i metadati dentro la chiave \texttt{meta} non vengono direttamente utilizzati dal modello ma servono più per debug e tracciabilità.
@@ -220,7 +220,7 @@ Una volta terminato il processo manuale di etichettatura, è possibile esportare
 Il file JSONL, pur essendo semplice e leggibile, non è direttamente utilizzabile dal motore di training utilizzato ovvero spaCy. Per questo motivo è stato introdotto un ulteriore step realizzato tramite script Python \texttt{jsonl\_to\_docbin.py}, con lo scopo di convertire il dataset annotato nel formato binario nativo di spaCy (\texttt{DocBin}), richiesto dalla procedura di addestramento.
 
 Nel dettaglio il seguente blocco di codice estratto dallo script fornisce la logica con cui viene inizializzato il modello.
-
+\\
 \begin{lstlisting}[language=Python]
 random.seed(args.seed)
 
@@ -273,7 +273,7 @@ Una volta caricato il file JSONL ottenuto dalla fase di etichettatura, per ogni 
 A questo punto vengono definiti i dataset di addestramento e valutazione in formato \texttt{DocBin}, ideale per ottimizzare le prestazioni del motore di spaCy, secondo la proporzione definita dall'argomento \texttt{dev\_ratio}, ovvero il valore in percentuale del dataset di evaluation. Per fare ciò prima della divisione dei dataset vengono mischiati tutti i campioni tramite un seed passabile come argomento al fine di rendere il processo di training osservabile e ripetibile.
 
 Al termine dello script i due dataset vengono salvati pronti per essere utilizzati nella fase di training, la quale viene eseguita direttamente da terminale all'interno del container utilizzando il seguente comando:
-
+\\
 \begin{lstlisting}
 docker compose run --rm ocr-ml \
 python -m spacy train /data/spacy/config.cfg \
@@ -288,7 +288,7 @@ Il processo genera nella cartella indicata di output una directory contenente i 
 
 Per consentire l'utilizzo del modello NER in un contesto applicativo, è stato realizzato un servizio web in Python basato su FastAPI. Il servizio espone un endpoint REST che riceve in input un documento PDF e restituisce un output strutturato contenente le entità riconosciute. Il flusso operativo del servizio può essere sintetizzato nei seguenti passaggi:
 \begin{enumerate}
-    \item \textbf{Acquisizione del documento}: La classe \texttt{UploadFile} consente di gestire il file come \textit{multipart/form-data} e ricevarne il contenuto.
+    \item \textbf{Acquisizione del documento}: La classe \texttt{UploadFile} consente di gestire il file come \textit{multipart/form-data} e riceverne il contenuto.
     \item \textbf{Parsing e segmentazione}: il PDF viene elaborato per estrarre e segmentare il contenuto testuale in finestre, applicando la stessa logica utilizzata nella pipeline di training, al fine di garantire coerenza tra fase di addestramento e fase di inferenza.
     \item \textbf{Predizione}: ciascuna finestra viene processata dal modello spaCy addestrato, ottenendo le \textit{label} estratte.
     \item \textbf{Post-processing e normalizzazione}: le entità estratte vengono aggregate e normalizzate in un formato JSON coerente con le esigenze applicative, indipendente dal motore di estrazione (modello custom o soluzione cloud-based).
@@ -408,7 +408,7 @@ Al termine dell'elaborazione il modello risultante viene deployato ed è accessi
 In parallelo alla soluzione custom basata su modello NER addestrato internamente, è stato implementato un servizio web alternativo che fa orchestratore tra l'interfaccia web e l'API esposta dal provider esterno.
 
 L'endpoint REST, realizzato anch'esso mediante FastAPI, ha la medesima struttura a livello di input e output. La differenza sta nel fatto che il file viene inoltrato al servizio Google Document AI utilizzando l’SDK ufficiale Python, previa autenticazione tramite Service Account. L’invocazione del servizio avviene specificando il progetto, la regione e l’identificativo del processor precedentemente configurato su Google Cloud.
-
+\\
 \begin{lstlisting}[language=Python]
 @router.post("/parse", response_model=DocAiParseResponse)
 async def docai_parse(
@@ -467,7 +467,17 @@ La nuova interfaccia realizzata è più semplice e immediata, e a livello operat
     \item mostrare le corrispondenze trovate e permettere all'utente la verifica e la selezione dei test prima della conferma.
 \end{itemize}
 
-[inserire immagini]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/interfaccia_start.png}
+    \caption{Interfaccia per il caricamento dei report}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/interfaccia_end.png}
+    \caption{Esempio di interfaccia dopo l'elaborazione del report}
+\end{figure}
 
 \subsection{Recupero dei dati aziendali e strategie di matching "debole"}
 

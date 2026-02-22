@@ -56,13 +56,46 @@ Tale vincolo aumenta la complessità del processo di estrazione e può influire 
 
 Alla luce dei risultati sperimentali presentati nella sezione precedente, è possibile effettuare un confronto strutturato tra i due approcci utilizzati. Il confronto non limita solo ai risultati ottenuti, ma prende in considerazione aspetti progettuali, architetturali ed anche economici che incidono significativamente sull'utilizzabilità della soluzione nel contesto applicativo di riferimento.
 
+\subsection{Confronto prestazionale}
+
+In primo luogo è necessario aprire una parentesi legata alle prestazioni ottenute dai due endpoint utilizzati per l'estrazione delle entità. Nella Tabella~\ref{tab:tempi_confronto} vengono riportate cinque esecuzioni a campione, ognuna effettuata con un file di input diverso, sia con l'endpoint che utilizza il modello custom, sia con quello che richiama i servizi cloud.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Run} & \textbf{Document AI (sec)} & \textbf{spaCy (sec)} \\
+\midrule
+Run 1 & 13.107455 & 0.440606 \\
+Run 2 & 8.403471 & 0.057668 \\
+Run 3 & 9.953679 & 0.098521 \\
+Run 4 & 9.918095 & 0.119696 \\
+Run 5 & 8.981371 & 0.073017 \\
+\midrule
+\textbf{Media} & \textbf{10.072814} & \textbf{0.157902} \\
+\bottomrule
+\end{tabular}
+\caption{Tempi di risposta dei due endpoint}
+\label{tab:tempi_confronto}
+\end{table}
+
+Come prevedibile, in questo caso, le prestazioni a livello temporale mantenendo il modello all'interno dell'applicativo sono notevolmente migliori. Per quanto riguarda l'approccio gestito, l'\textit{overhead} è legato a vari fattori, tra cui:
+
+\begin{itemize}
+    \item Inizializzazione del client, solo durante la prima esecuzione
+    \item Tempo di trasferimento del documento sul server
+    \item Verifica dati di autenticazione
+    \item Allocazione delle risorse per il processo
+    \item Latenza di rete
+\end{itemize}
+
 \subsection{Confronto architetturale}
 
-L'approccio custom garantisce un controllo completo sull'intera pipeline descritta nei capitolo precedenti. Tale controllo consente una maggiore adattabilità a specifiche esigenze di dominio che come abbiamo visto porta a dei risultati tendenzialmente migliori in termini di qualità delle estrazioni.
+L'approccio custom garantisce un controllo completo sull'intera pipeline descritta nei capitolo precedenti. Tale controllo consente una maggiore aderenza a specifiche esigenze di dominio che come abbiamo visto porta a dei risultati tendenzialmente migliori in termini di qualità delle estrazioni, tuttavia all'aumentare della variablità dei dati di input può diventare complesso gestire tutte le logiche in modo funzionale e adattabile a tutti i contesti.
 
 L'approccio su servizio gestito, invece, delega al provider cloud la complessità legata all'analisi del layout e al riconoscimento delle entità. Questo riduce sensibilmente l'effort iniziale e semplifica l'integrazione in un applicativo, ma introduce una dipendenza tecnologica e limita la possibilità di personalizzazione fine del modello.
 
-Un altro beneficio offerto dal servizio cloud che va a scapito delle prestazioni, è la possibilità di definire associazioni logiche tra le etichette, questo rappresenta un plus notevole in fase di post-processing e utilizzo all'interno dell'applicativo poiché consente di avere un output già ben strutturato e su cui è possibile fare matching più corretti.
+Ciò che veramente rappresenta il beneficio principale di uno strumento complesso come quello utilizzato di Google, sono le potenzialità di definire associazioni logiche tra le etichette oltre che a creare etichette dedotte e non estratte direttamente dal testo. Questi due fattori rendono l'utilizzo i dati ottenuti molto più fruibili, in particolare rappresentano un plus notevole in fase di post-processing e utilizzo all'interno dell'applicativo poiché consentono di avere un output già ben strutturato su cui è possibile impostare delle logiche di ricerca dei dati più mirate.
 
 \subsection{Confronto operativo}
 
